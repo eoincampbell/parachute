@@ -1,0 +1,31 @@
+﻿Parachute
+A SQL Server Schema Deployment Tool.
+
+Usage
+ parachute.exe [options]
+
+Switches
+ Connectivity
+  -s, --server [SERVER]     The SQL Server Instance to connect
+  -d, --database [CATALOG]  The SQL Server Database to apply scripts to
+  -u, --username [USER]     The Username to connect as when applying scripts
+  -p, --password [PASS]     The Password to connect with when applying scripts
+
+  -c, --conn [CONN STRING]  The connection string to connect to the database.
+                            If a connection string is supplied it will override
+                            all other connection information switches.
+
+ Functionality
+      --setup               Generates the required [dbo].[parachuteTracker]
+                            table in the database if it doesn't exist
+  -r, --source              The path of the directory containing the scripts to
+                            be applied
+
+ Output
+  By default, output will be written to STDOUT
+  -l, --logfile [FILE]      Path to logfile to which log inf will be appended
+  -v, --verbose             Verbose log information will be outputed
+
+ Miscellaneous
+      --help                Display this help and exit
+      --version             Display application version information and exit.

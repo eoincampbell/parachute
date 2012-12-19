@@ -1,0 +1,3 @@
+Parachute
+A SQL Server Schema Deployment Tool.
+For more options:    parachute.exe --help

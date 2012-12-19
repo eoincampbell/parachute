@@ -1,0 +1,5 @@
+﻿Parachute
+A SQL Server Schema Deployment Tool.
+Version:          $VERSION$
+File Version:     $FILEVERSION$
+Product Version:  $PRODUCTVERSION$
