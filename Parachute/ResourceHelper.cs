@@ -42,5 +42,10 @@ namespace Parachute
         {
             return Resources.Parachute.ChangeLogCreationScript;
         }
+
+        public static string GetChangeLogExistsScript()
+        {
+            return Resources.Parachute.ChangeLogExistsScript;
+        }
     }
 }

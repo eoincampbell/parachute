@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,7 +15,7 @@ namespace Parachute
         public string Username { get; set; }
         public string Password { get; set; }
         public string ConnectionString { get; set; }
-        public string SqlScriptsPath { get; set; }
+        public string ConfigFilePath { get; set; }
         public bool SetupDatabase { get; set; }
 
         public bool ExitNow { get; set; }
@@ -25,9 +26,8 @@ namespace Parachute
         {
             if (!string.IsNullOrEmpty(ConnectionString))
             {
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, "===================================================================================");
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, "Connecting Using ConnectionString...");
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, string.Format("ConnectionString: {0}", ConnectionString));
+                TraceHelper.Verbose("Connecting Using ConnectionString...");
+                TraceHelper.Verbose("ConnectionString: {0}", ConnectionString);
 
                 if (!SqlConnectionManager.TestConnection(ConnectionString))
                 {
@@ -39,12 +39,11 @@ namespace Parachute
             else
             {
                 //Use CmdLine Params
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, "===================================================================================");
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, "Connecting Using CmdLine Arguments...");
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, string.Format("Server:    {0}", Server));
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, string.Format("Database:  {0}", Database));
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, string.Format("Username:  {0}", Username));
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, string.Format("Password:  {0}", Password));
+                TraceHelper.Verbose("Connecting Using CmdLine Arguments...");
+                TraceHelper.Verbose("Server:    {0}", Server);
+                TraceHelper.Verbose("Database:  {0}", Database);
+                TraceHelper.Verbose("Username:  {0}", Username);
+                TraceHelper.Verbose("Password:  {0}", Password);
 
                 var connstr = SqlConnectionManager.BuildConnectionString(Server, Database, Username, Password);
                 ConnectionString = connstr;
@@ -54,6 +53,21 @@ namespace Parachute
                     ExitNow = true;
                     return false;
                 }
+            }
+
+
+            if(string.IsNullOrEmpty(ConfigFilePath))
+            {
+                ExitMessage = "Config File Path is not specified.\r\nYou must specify a configfile using the -f switch.\r\nExiting!";
+                ExitNow = true;
+                return false;
+            }
+
+            if (!File.Exists(ConfigFilePath))
+            {
+                ExitMessage = "The specified config file does not exist.\r\nYou must specify a configfile using the -f switch.\r\nExiting!";
+                ExitNow = true;
+                return false;
             }
 
             return true;

@@ -64,22 +64,49 @@ namespace Parachute.Resources {
         ///   Looks up a localized string similar to IF NOT EXISTS (
         ///	SELECT	* 
         ///	FROM	INFORMATION_SCHEMA.TABLES 
-        ///	WHERE	TABLE_NAME = &apos;__ParachuteChangeLog&apos;
+        ///	WHERE	TABLE_NAME = &apos;__ParachuteSchemaChangeLogs&apos;
         ///	AND		TABLE_SCHEMA = &apos;dbo&apos;)
         ///BEGIN
-        ///	PRINT &apos;Creating Table [dbo].[__ParachuteChangeLog]&apos;
-        ///	CREATE TABLE [dbo].[__ParachuteChangeLog]
+        ///	PRINT &apos;Parachute Setup - Creating Table [dbo].[__ParachuteSchemaChangeLogs]&apos;
+        ///	CREATE TABLE [dbo].[__ParachuteSchemaChangeLogs]
         ///	(
-        ///		[ParachuteChangeLogId] [int] IDENTITY(1,1) NOT NULL,
+        ///		[ParachuteSchemaChangeLogId] [int] IDENTITY(1,1) NOT NULL,
         ///		[MajorReleaseNumber] [varchar](2) NOT NULL,
         ///		[MinorReleaseNumber] [varchar](2) NOT NULL,
         ///		[PointReleaseNumber] [varchar](4) NOT NULL,
-        ///		[ScriptName] [nvarchar](200) NOT NULL,
-        ///		[DateApplied] [datetime] N [rest of string was truncated]&quot;;.
+        ///		[ScriptName] [nvarchar] [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ChangeLogCreationScript {
             get {
                 return ResourceManager.GetString("ChangeLogCreationScript", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IF EXISTS (
+        ///	SELECT	* 
+        ///	FROM	INFORMATION_SCHEMA.TABLES 
+        ///	WHERE	TABLE_NAME = &apos;__ParachuteAppliedScriptsLogs&apos;
+        ///	AND		TABLE_SCHEMA = &apos;dbo&apos;
+        ///) AND EXISTS (
+        ///	SELECT	* 
+        ///	FROM	INFORMATION_SCHEMA.TABLES 
+        ///	WHERE	TABLE_NAME = &apos;__ParachuteSchemaChangeLogs&apos;
+        ///	AND		TABLE_SCHEMA = &apos;dbo&apos;
+        ///) AND EXISTS (
+        ///	SELECT	* 
+        ///	FROM	INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE
+        ///	WHERE	CONSTRAINT_NAME = &apos;FK___ParachuteAppliedScriptsLogs___ParachuteSchemaChangeLogs&apos;
+        ///	AND		CONSTRAINT_SCHEMA = &apos;dbo&apos;
+        ///)
+        ///BEGIN
+        ///	SELECT 1
+        ///END
+        ///ELSE  [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string ChangeLogExistsScript {
+            get {
+                return ResourceManager.GetString("ChangeLogExistsScript", resourceCulture);
             }
         }
         

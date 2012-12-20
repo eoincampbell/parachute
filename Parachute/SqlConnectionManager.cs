@@ -138,6 +138,27 @@ namespace Parachute
             return result;
         }
 
+        public bool IsDatabaseConfiguredForParachute()
+        {
+            try
+            {
+                using (var cmd = _connection.CreateCommand())
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.CommandText = ResourceHelper.GetChangeLogExistsScript();
+                    return ((int) cmd.ExecuteScalar() == 1);
+                }
+            }
+            catch (SqlException sqlEx)
+            {
+                foreach (SqlError error in sqlEx.Errors)
+                {
+                    OnInfoOrErrorMessage(error);
+                }
+                return false;
+            }
+        }
+
         public void Dispose()
         {
             if (_connection != null)
@@ -164,9 +185,8 @@ namespace Parachute
             }
             catch(Exception ex)
             {
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceError, "===================================================================================");
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceError, ex.Message);
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceError, ex.ToString());
+                TraceHelper.Error(ex.Message);
+                TraceHelper.Error(ex.ToString());
                 return string.Empty;
             }
         }
@@ -186,9 +206,8 @@ namespace Parachute
             }
             catch(Exception ex)
             {
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceError, "===================================================================================");
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceError, ex.Message);
-                Trace.WriteLineIf(Program.LoggingSwitch.TraceError, ex.ToString());
+                TraceHelper.Error(ex.Message);
+                TraceHelper.Error(ex.ToString());
             }
 
             return false;

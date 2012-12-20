@@ -79,9 +79,9 @@ namespace Parachute
                     case "--setup":
                         settings.SetupDatabase = true;
                         break;
-                    case "--source":
-                    case "-r":
-                        settings.SqlScriptsPath = Arguments[++i];
+                    case "--configfile":
+                    case "-f":
+                        settings.ConfigFilePath = Arguments[++i];
                         break;
                 }
             }
@@ -101,7 +101,7 @@ namespace Parachute
                         Trace.Listeners.Add(new TextWriterTraceListener(Arguments[++i]));
                         break;
                     case "--loglevel":
-                        Program.LoggingSwitch.Level = GetLevel(Arguments[++i]);
+                        TraceHelper.LoggingSwitch.Level = GetLevel(Arguments[++i]);
                         break;
                 }
             }

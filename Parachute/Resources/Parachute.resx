@@ -128,6 +128,9 @@
     <value>en\VersionInfo.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
   <data name="ChangeLogCreationScript" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>en\changelogcreationscript.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+    <value>common\changelogcreationscript.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="ChangeLogExistsScript" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>common\changelogexistsscript.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
 </root>

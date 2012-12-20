@@ -43,7 +43,7 @@ namespace Parachute.Tests
             var ap = new ArgumentParser(args);
             var settings = ap.ParseSettings();
             Assert.IsNotNull(settings);
-            Assert.AreEqual("C:\\Path\\To\\Files\\", settings.SqlScriptsPath);
+            Assert.AreEqual("C:\\Path\\To\\Files\\", settings.ConfigFilePath);
         }
 
         [TestMethod]
@@ -53,7 +53,7 @@ namespace Parachute.Tests
             var ap = new ArgumentParser(args);
             var settings = ap.ParseSettings();
             Assert.IsNotNull(settings);
-            Assert.AreEqual("C:\\Path\\To\\Files\\", settings.SqlScriptsPath);
+            Assert.AreEqual("C:\\Path\\To\\Files\\", settings.ConfigFilePath);
         }
 
         [TestMethod]

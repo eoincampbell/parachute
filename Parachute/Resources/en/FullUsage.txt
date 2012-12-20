@@ -18,8 +18,8 @@ Switches
  Functionality
       --setup               Generates the required Parachute Change Log tables 
                             in the database if it doesn't exist
-  -r, --source              The path of the directory containing the scripts to
-                            be applied
+  -f, --configfile          The path of the config xml file containing locations 
+                            of scripts to be applied
 
  Output
   -l, --logfile [FILE]      Path to logfile to which log info will be appended

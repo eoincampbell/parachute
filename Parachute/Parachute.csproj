@@ -58,7 +58,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Parachute.resx</DependentUpon>
     </Compile>
+    <Compile Include="ScriptInformationLoader.cs" />
     <Compile Include="SqlConnectionManager.cs" />
+    <Compile Include="TraceHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Parachute.resx">
@@ -76,12 +78,13 @@
     <EmbeddedResource Include="Resources\en\VersionInfo.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\en\ChangeLogCreationScript.sql" />
+    <EmbeddedResource Include="Resources\Common\ChangeLogCreationScript.sql" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ExampleConfig.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\Common\ChangeLogExistsScript.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

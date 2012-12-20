@@ -1,23 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 
 namespace Parachute
 {
     public class Program
     {
-        public static TraceSwitch LoggingSwitch = new TraceSwitch("ParachuteTrace", "ParachuteTrace", "3");
-
+        
         static void Main(string[] args)
         {
-            Trace.AutoFlush = true;
-            LoggingSwitch.Level = TraceLevel.Info;
-
             //string a = "--server (local) --database Sandbox --username sa --password epiosql --loglevel 4 --console --setup";
-            string a = "-s (local) -d Sandbox -u sa -p epiosql --loglevel 4 --console --setup --source config.xml";
+            const string a = "-s (local) -d Sandbox -u sa -p epiosql --loglevel 3 --console --setup -f ExampleConfig.xml";
             //string a = "-c Server=(local);Database=master;Trusted_Connection=True;MultipleActiveResultSets=true; -v";
             //string a = "--version";
 
@@ -26,53 +19,66 @@ namespace Parachute
             var settings = parser.ParseSettings();
             if (settings.ExitNow)
             {
-                Trace.WriteLineIf(LoggingSwitch.TraceWarning,settings.ExitMessage);
+                TraceHelper.Warning(settings.ExitMessage);
                 goto exitpoint;
             }
             
             //Validates the different settings.
             if(!settings.IsValid())
             {
-                Trace.WriteLine(LoggingSwitch.TraceWarning, settings.ExitMessage);
+                TraceHelper.Warning(settings.ExitMessage);
                 goto exitpoint;
             }
 
             //Start Doing Work...
+            var loader = new ScriptInformationLoader(settings.ConfigFilePath);
+            var scriptInfo = loader.Load();
 
-            //Check if the database is configured for Parachute (i.e. have the change logs been added).
-
-            //Load up all the scripts we might need to run...
+            if(scriptInfo == null)
+            {
+                goto exitpoint;
+            }
             
-
-
-
-            //Connect to Database and see if the ChangeLog Tables are present.
-            //If not... are we in setup mode
-            //If yes, create the db change tracking table
-            //If not, exit 
             using (var sqlManager = new SqlConnectionManager(settings.ConnectionString))
             {
                 sqlManager.InfoOrErrorMessage += SqlManagerOnInfoOrErrorMessage;
 
-                if(settings.SetupDatabase)
+                //Check if the database is configured for Parachute (i.e. have the change logs been added).
+                var databaseIsConfigured = sqlManager.IsDatabaseConfiguredForParachute();
+
+                if (!databaseIsConfigured)
                 {
-                    if(!sqlManager.SetupDatabase())
+                    //If not... are we in setup mode
+                    if (settings.SetupDatabase)
                     {
+                        //If yes, create the db change tracking table
+                        if (!sqlManager.SetupDatabase())
+                        {
+                            goto exitpoint;
+                        }
+                    }
+                    else
+                    {
+                        //If not, exit 
+                        TraceHelper.Error("Database is not configured for Parachute");
+                        TraceHelper.Error("Re-run application with --setup switch to install Parachute ChangeLog Tables");
                         goto exitpoint;
                     }
                 }
+
+                //Next... Apply the Schema Changes... Schema Files are run-once only
+
+                //Load up the list of files/folders to be executed ?
+                //Start iterating through them
+                //Execute them in order.
+
+
+                int x = 1 + 2;
+                
             }
             
             
-            //Next... Apply the Schema Changes... Schema Files are run-once only
             
-            
-            
-            
-            //Load up the list of files/folders to be executed ?
-                //Start iterating through them
-                    //Execute them in order.
-
 
             
 
@@ -90,17 +96,13 @@ exitpoint:
         {
             if (error == null) throw new ArgumentNullException("error");
 
-            string message;
-            Trace.WriteLineIf(LoggingSwitch.TraceError, "===================================================================================");
             if (error.Class > 10)
             {
-                message =string.Format("Msg {0}, Level {1}, State {2}, Line {3}{4}{5}", error.Number, error.Class, error.State, error.LineNumber, Environment.NewLine, error.Message);
-                Trace.WriteLineIf(LoggingSwitch.TraceError, message);
+                TraceHelper.Error("Msg {0}, Level {1}, State {2}, Line {3}{4}{5}", error.Number, error.Class, error.State, error.LineNumber, Environment.NewLine, error.Message);
             }
             else
             {
-                message = string.Format("{0}", error.Message);
-                Trace.WriteLineIf(LoggingSwitch.TraceInfo, message);
+                TraceHelper.Info("{0}", error.Message);
             }
         }
     }
