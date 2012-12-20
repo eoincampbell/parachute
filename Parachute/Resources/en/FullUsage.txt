@@ -16,15 +16,16 @@ Switches
                             all other connection information switches.
 
  Functionality
-      --setup               Generates the required [dbo].[parachuteTracker]
-                            table in the database if it doesn't exist
+      --setup               Generates the required Parachute Change Log tables 
+                            in the database if it doesn't exist
   -r, --source              The path of the directory containing the scripts to
                             be applied
 
  Output
-  By default, output will be written to STDOUT
-  -l, --logfile [FILE]      Path to logfile to which log inf will be appended
-  -v, --verbose             Verbose log information will be outputed
+  -l, --logfile [FILE]      Path to logfile to which log info will be appended
+      --console             Log information will be appended to Console.
+	  --loglevel			The verbosity of logging. 
+							"1" Error, "2" Warning, "3" Information, "4" Verbose
 
  Miscellaneous
       --help                Display this help and exit

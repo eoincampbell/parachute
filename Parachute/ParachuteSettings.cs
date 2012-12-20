@@ -17,35 +17,41 @@ namespace Parachute
         public string SqlScriptsPath { get; set; }
         public bool SetupDatabase { get; set; }
 
-        public bool Validate()
+        public bool ExitNow { get; set; }
+        public string ExitMessage { get; set; }
+
+
+        public bool IsValid()
         {
-            if(!string.IsNullOrEmpty(ConnectionString))
+            if (!string.IsNullOrEmpty(ConnectionString))
             {
-                Trace.WriteLine("===================================================================================");
-                Trace.WriteLine("Connecting Using ConnectionString...");
-                Trace.WriteLine(string.Format("ConnectionString: {0}", ConnectionString));
-                
-                if(!SqlManager.TestConnection(ConnectionString))
+                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, "===================================================================================");
+                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, "Connecting Using ConnectionString...");
+                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, string.Format("ConnectionString: {0}", ConnectionString));
+
+                if (!SqlConnectionManager.TestConnection(ConnectionString))
                 {
-                    Console.WriteLine("Failed to Connect To Database. Exiting!");
+                    ExitMessage = "Failed to Connect To Database. Exiting!";
+                    ExitNow = true;
                     return false;
                 }
             }
             else
             {
                 //Use CmdLine Params
-                Trace.WriteLine("===================================================================================");
-                Trace.WriteLine("Connecting Using CmdLine Arguments...");
-                Trace.WriteLine(string.Format("Server:    {0}", Server));
-                Trace.WriteLine(string.Format("Database:  {0}", Database));
-                Trace.WriteLine(string.Format("Username:  {0}", Username));
-                Trace.WriteLine(string.Format("Password:  {0}", Password));
-                
-                string connstr = SqlManager.BuildConnectionString(Server, Database, Username, Password);
+                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, "===================================================================================");
+                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, "Connecting Using CmdLine Arguments...");
+                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, string.Format("Server:    {0}", Server));
+                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, string.Format("Database:  {0}", Database));
+                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, string.Format("Username:  {0}", Username));
+                Trace.WriteLineIf(Program.LoggingSwitch.TraceVerbose, string.Format("Password:  {0}", Password));
 
-                if (!SqlManager.TestConnection(connstr))
+                var connstr = SqlConnectionManager.BuildConnectionString(Server, Database, Username, Password);
+                ConnectionString = connstr;
+                if (!SqlConnectionManager.TestConnection(ConnectionString))
                 {
-                    Console.WriteLine("Failed to Connect To Database. Exiting!");
+                    ExitMessage = "Failed to Connect To Database. Exiting!";
+                    ExitNow = true;
                     return false;
                 }
             }

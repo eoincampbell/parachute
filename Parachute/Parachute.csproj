@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Parachute</RootNamespace>
-    <AssemblyName>Parachute</AssemblyName>
+    <AssemblyName>parachute</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -45,21 +45,43 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArgumentParser.cs" />
+    <Compile Include="Entities\Script.cs" />
+    <Compile Include="Entities\ScriptInformation.cs" />
+    <Compile Include="Entities\ScriptLocation.cs" />
+    <Compile Include="Entities\Variable.cs" />
     <Compile Include="ParachuteSettings.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ResourceManager.cs" />
-    <Compile Include="SqlManager.cs" />
+    <Compile Include="ResourceHelper.cs" />
+    <Compile Include="Resources\Parachute.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Parachute.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SqlConnectionManager.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Parachute.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Parachute.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <None Include="app.config" />
-    <EmbeddedResource Include="Resources\Usage.txt" />
+    <EmbeddedResource Include="Resources\en\Usage.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\FullUsage.txt" />
+    <EmbeddedResource Include="Resources\en\FullUsage.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\VersionInfo.txt" />
+    <EmbeddedResource Include="Resources\en\VersionInfo.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\en\ChangeLogCreationScript.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ExampleConfig.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

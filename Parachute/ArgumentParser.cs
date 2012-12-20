@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Parachute
 {
@@ -18,26 +16,46 @@ namespace Parachute
 
         public ParachuteSettings ParseSettings()
         {
+            var settings = new ParachuteSettings();
+
             if (!Arguments.Any())
             {
-                Console.WriteLine(ResourceManager.GetUsageMessage());
-                return null;
+                settings.ExitMessage = ResourceHelper.GetUsageMessage();
+                settings.ExitNow = true;
+                return settings;
             }
 
             ConfigureOutput();
 
-            ParachuteSettings settings = new ParachuteSettings();
+            ConfigureSettings(ref settings);
 
+            return settings;
+        }
+
+        private TraceLevel GetLevel(string s)
+        {
+            int level;
+            if(int.TryParse(s, out level) && level >= 1 && level <= 4)
+            {
+                return (TraceLevel) level;
+            }
+            return TraceLevel.Info;
+        }
+
+        private void ConfigureSettings(ref ParachuteSettings settings)
+        {
             for (var i = 0; i < Arguments.Count(); i++)
             {
                 switch (Arguments[i])
                 {
                     case "--help":
-                        Console.WriteLine(ResourceManager.GetFullUsageMessage());
-                        return null;
+                        settings.ExitMessage = ResourceHelper.GetFullUsageMessage();
+                        settings.ExitNow = true;
+                        return;
                     case "--version":
-                        Console.WriteLine(ResourceManager.GetVersionInformationMessage());
-                        return null;
+                        settings.ExitMessage = ResourceHelper.GetVersionInformationMessage();
+                        settings.ExitNow = true;
+                        return;
                     case "-s":
                     case "--server":
                         settings.Server = Arguments[++i];
@@ -67,17 +85,26 @@ namespace Parachute
                         break;
                 }
             }
-
-            return settings;
         }
 
         private void ConfigureOutput()
         {
-            if (Arguments.Any(arg => arg.Equals("--verbose") || arg.Equals("-v")))
+            for (var i = 0; i < Arguments.Count(); i++)
             {
-                Trace.Listeners.Add(new ConsoleTraceListener(true));
+                switch (Arguments[i])
+                {
+                    case "--console":
+                        Trace.Listeners.Add(new ConsoleTraceListener(true));
+                        break;
+                    case "--logfile":
+                    case "-l":
+                        Trace.Listeners.Add(new TextWriterTraceListener(Arguments[++i]));
+                        break;
+                    case "--loglevel":
+                        Program.LoggingSwitch.Level = GetLevel(Arguments[++i]);
+                        break;
+                }
             }
-
         }
     }
 }
