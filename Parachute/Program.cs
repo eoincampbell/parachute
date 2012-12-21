@@ -19,7 +19,7 @@ namespace Parachute
             }
             catch(Exception ex)
             {
-                TraceHelper.Verbose(ex.Message);
+                TraceHelper.Verbose(ex.ToString());
                 Console.Read();
                 return 1;
             }

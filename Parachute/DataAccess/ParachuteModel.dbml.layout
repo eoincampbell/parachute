@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 11, 8.5" name="ParachuteModel">
+  <DataContextMoniker Name="/ParachuteModelDataContext" />
+  <nestedChildShapes>
+    <classShape Id="de5b8b37-06c1-4d7f-84cb-319b3bcee0db" absoluteBounds="1.625, 1.375, 4.5, 1.5785953776041666">
+      <DataClassMoniker Name="/ParachuteModelDataContext/ParachuteAppliedScriptsLog" />
+      <nestedChildShapes>
+        <elementListCompartment Id="22342982-acbf-41aa-a9f6-3874cf17f0a5" absoluteBounds="1.64, 1.835, 4.4700000000000006, 1.0185953776041665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="1fdcdcde-84f0-4fd8-953d-912c178b5a26" absoluteBounds="1.625, 4, 4.5, 1.7708968098958327">
+      <DataClassMoniker Name="/ParachuteModelDataContext/ParachuteSchemaChangeLog" />
+      <nestedChildShapes>
+        <elementListCompartment Id="85b64dfb-4007-4297-9b8e-566fba995da5" absoluteBounds="1.64, 4.46, 4.4700000000000006, 1.2108968098958333" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <associationConnector edgePoints="[(3.875 : 4); (3.875 : 2.95359537760417)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+      <AssociationMoniker Name="/ParachuteModelDataContext/ParachuteSchemaChangeLog/__ParachuteSchemaChangeLog___ParachuteAppliedScriptsLog" />
+      <nodes>
+        <classShapeMoniker Id="1fdcdcde-84f0-4fd8-953d-912c178b5a26" />
+        <classShapeMoniker Id="de5b8b37-06c1-4d7f-84cb-319b3bcee0db" />
+      </nodes>
+    </associationConnector>
+  </nestedChildShapes>
+</ordesignerObjectsDiagram>

@@ -4,31 +4,25 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Data.SqlClient;
+using Parachute.Entities;
+using Parachute.Logic;
 
-namespace Parachute.Logic
+namespace Parachute.DataAccess
 {
     public class SqlConnectionManager : IDisposable
     {
         private const string ApplicationName = "Parachute";
-
         private readonly SqlConnection _connection;
-
+        private readonly string _connectionString;
         public event EventHandler<SqlError> InfoOrErrorMessage;
+        private static Regex _splitterRegex = new Regex("^\\s*GO\\s*$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+
+        #region Event Handling
 
         private void OnInfoOrErrorMessage(SqlError e)
         {
             var handler = InfoOrErrorMessage;
             if (handler != null) handler(this, e);
-        }
-
-        public SqlConnectionManager(string connectionString)
-        {
-            _connection = new SqlConnection(connectionString);
-            if (_connection.State == ConnectionState.Broken || _connection.State == ConnectionState.Closed)
-            {
-                _connection.Open();
-            }
-            _connection.InfoMessage +=  InfoMessageReceived;
         }
 
         private void InfoMessageReceived(object sender, SqlInfoMessageEventArgs e)
@@ -39,8 +33,26 @@ namespace Parachute.Logic
             }
         }
 
+        #endregion
 
-        public void ExecuteFile(string sqlFile)
+        #region Constructor
+
+        public SqlConnectionManager(string connectionString)
+        {
+            _connectionString = connectionString;
+            _connection = new SqlConnection(connectionString);
+            if (_connection.State == ConnectionState.Broken || _connection.State == ConnectionState.Closed)
+            {
+                _connection.Open();
+            }
+            _connection.InfoMessage +=  InfoMessageReceived;
+        }
+
+        #endregion
+
+        #region Manual Sql Executions
+
+        private string GetSqlScriptFromFile(string sqlFile)
         {
             string sql;
 
@@ -49,9 +61,90 @@ namespace Parachute.Logic
             {
                 sql = reader.ReadToEnd();
             }
+            return sql;
+        }
 
-            var regex = new Regex("^\\s*GO\\s*$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
-            var blocksOfSql = regex.Split(sql);
+        public void ExecuteSchemaFile(string sqlFile, SchemaVersion version)
+        {
+            var sql = GetSqlScriptFromFile(sqlFile);
+            var blocksOfSql = _splitterRegex.Split(sql);
+
+            using (var transaction = _connection.BeginTransaction())
+            {
+                using (var cmd = _connection.CreateCommand())
+                {
+                    cmd.Connection = _connection;
+                    cmd.Transaction = transaction;
+                    cmd.CommandType = CommandType.Text;
+
+                    foreach (var block in blocksOfSql.Where(block => block.Length > 0))
+                    {
+                        cmd.CommandText = block;
+
+                        try
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                        catch (SqlException sqlEx)
+                        {
+                            foreach (SqlError error in sqlEx.Errors)
+                            {
+                                OnInfoOrErrorMessage(error);
+                            }
+
+                            transaction.Rollback();
+                            throw;
+                        }
+                        catch(Exception ex)
+                        {
+                            TraceHelper.Error(ex.Message);
+                            throw;
+                        }
+                    }
+                }
+
+                using(var dc = new ParachuteModelDataContext(_connection))
+                {
+                    dc.Transaction = transaction;
+
+                    var entry = new ParachuteSchemaChangeLog()
+                        {
+                            MajorReleaseNumber = version.MajorVersion,
+                            MinorReleaseNumber = version.MinorVersion,
+                            PointReleaseNumber = version.PointRelease,
+                            ScriptName = sqlFile
+                        };
+
+                    dc.ParachuteSchemaChangeLogs.InsertOnSubmit(entry);
+                    try
+                    {
+                        dc.SubmitChanges();
+                    }
+                    catch(SqlException sqlEx)
+                    {
+                        foreach (SqlError error in sqlEx.Errors)
+                        {
+                            OnInfoOrErrorMessage(error);
+                        }
+                        transaction.Rollback();
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        TraceHelper.Error(ex.Message);
+                        throw;
+                    }
+                }
+
+                transaction.Commit();
+            }
+
+        }
+
+        public void ExecuteScriptFile(string sqlFile)
+        {
+            var sql = GetSqlScriptFromFile(Path.GetFileName(sqlFile));
+            var blocksOfSql = _splitterRegex.Split(sql);
 
             using (var transaction = _connection.BeginTransaction())
             {
@@ -155,11 +248,34 @@ namespace Parachute.Logic
             }
         }
 
+        #endregion Manual Sql Executions
+
+
+        #region IDisposable
+
         public void Dispose()
         {
             if (_connection != null)
             {
                 _connection.Dispose();
+            }
+        }
+
+        #endregion
+
+        public SchemaVersion GetCurrentSchemaVersion()
+        {
+            using(var pmdc = new ParachuteModelDataContext(_connection))
+            {
+                var result = pmdc.ParachuteSchemaChangeLogs
+                    .OrderByDescending(l => l.MajorReleaseNumber)
+                    .ThenByDescending(l => l.MinorReleaseNumber)
+                    .ThenByDescending(l => l.PointReleaseNumber)
+                    .FirstOrDefault();
+
+                return result == null 
+                    ? SchemaVersion.MinValue 
+                    : new SchemaVersion(result.MajorReleaseNumber, result.MinorReleaseNumber, result.PointReleaseNumber);
             }
         }
 

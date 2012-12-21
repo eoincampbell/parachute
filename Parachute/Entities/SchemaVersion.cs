@@ -113,5 +113,10 @@ namespace Parachute.Entities
         {
             return !first.Equals(second);
         }
+
+        public static SchemaVersion Parse(string input)
+        {
+            return new SchemaVersion(input.Substring(0,2), input.Substring(3,2), input.Substring(6,4));
+        }
     }
 }

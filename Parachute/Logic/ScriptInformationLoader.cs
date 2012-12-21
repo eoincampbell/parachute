@@ -16,10 +16,10 @@ namespace Parachute.Logic
             FileName = filename;
         }
 
-        public ScriptInformation Load()
+        private ScriptInformation LoadFromFile()
         {
-            
             ScriptInformation info;
+
             try
             {
                 TraceHelper.Info(string.Format("Attempting to load script info from {0}", FileName));
@@ -27,41 +27,26 @@ namespace Parachute.Logic
                 {
                     using (var reader = new StreamReader(strm))
                     {
-                        var serializer = new XmlSerializer(typeof (ScriptInformation));
+                        var serializer = new XmlSerializer(typeof(ScriptInformation));
 
                         info = serializer.Deserialize(reader) as ScriptInformation;
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                throw new ParachuteException(ex.Message,  ex);
+                throw new ParachuteException(ex.Message, ex);
             }
+            return info;
+        }
 
-
-            /************************************************************
-             * Validation
-             */
+        public ScriptInformation Load()
+        {
+            ScriptInformation info = LoadFromFile();
 
             TraceHelper.Info("Validating Script Configuration File '{0}'", FileName);
 
-            if (info == null)
-            {
-                TraceHelper.Error("Configuration file '{0}' could not be parsed. See example files in GitHub Wiki.", FileName);
-                throw new ParachuteException("Aborting. Incorrect Configuration.");
-            }
-
-            if(info.ScriptLocations.Count < 0)
-            {
-                TraceHelper.Error("Configuration file '{0}' contains no <scriptLocation> elements.", FileName);
-                throw new ParachuteException("Aborting. Incorrect Configuration.");
-            }
-
-            if(info.ScriptLocations.Count(l => l.ContainsSchemaScripts) > 1)
-            {
-                TraceHelper.Error("Configuration file '{0}' contains more than one <scriptLocation> with containsSchemaScripts=\"true\".", FileName);
-                throw new ParachuteException("Aborting. Incorrect Configuration.");
-            }
+            InformationChecks(info);
 
             foreach(var location in info.ScriptLocations)
             {
@@ -77,6 +62,27 @@ namespace Parachute.Logic
             return info;
         }
 
+        private void InformationChecks(ScriptInformation info)
+        {
+            if (info == null)
+            {
+                TraceHelper.Error("Configuration file '{0}' could not be parsed. See example files in GitHub Wiki.", FileName);
+                throw new ParachuteException("Aborting. Incorrect Configuration.");
+            }
+
+            if (info.ScriptLocations.Count < 0)
+            {
+                TraceHelper.Error("Configuration file '{0}' contains no <scriptLocation> elements.", FileName);
+                throw new ParachuteException("Aborting. Incorrect Configuration.");
+            }
+
+            if (info.ScriptLocations.Count(l => l.ContainsSchemaScripts) > 1)
+            {
+                TraceHelper.Error("Configuration file '{0}' contains more than one <scriptLocation> with containsSchemaScripts=\"true\".", FileName);
+                throw new ParachuteException("Aborting. Incorrect Configuration.");
+            }
+        }
+
         private void LocationCheckCustomScriptVariables(ScriptLocation location)
         {
             if(!location.Scripts.Any())
@@ -85,10 +91,7 @@ namespace Parachute.Logic
                 return;
             }
 
-            var files = Directory
-                .GetFiles(location.Path, "*.sql", SearchOption.TopDirectoryOnly)
-                .Select(Path.GetFileName)
-                .ToList();
+            var files = location.ScriptFiles.ToList();
 
             foreach(var script in location.Scripts)
             {
@@ -122,7 +125,7 @@ namespace Parachute.Logic
 
         private void LocationCheckSchemaFile(string filename)
         {
-            var r = new Regex(@"\d\d\.\d\d\.\d\d\d\d\..*");
+            var r = new Regex(@"\d{2}\.\d{2}\.\d{4}..*");
 
             if (r.IsMatch(filename)) return;
             

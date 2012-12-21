@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Parachute.DataAccess;
 using Parachute.Entities;
 using Parachute.Logic;
 
@@ -19,7 +21,7 @@ namespace Parachute
         public void Start(string [] args)
         {
             //Parses command line settings to decide how to run application.
-            var Settings = ParachuteSettings.GetSettings(a.Split(' '));
+            Settings = ParachuteSettings.GetSettings(a.Split(' '));
             if (Settings.ExitNow || !Settings.IsValid())
             {
                 TraceHelper.Warning(Settings.ExitMessage);
@@ -41,12 +43,7 @@ namespace Parachute
                 //Logic Flow from here down...
 
                 //Query the Schema Change Log Tables.
-                SchemaVersion currentVersion ;
-                //Get the the MaxVersion from the Table...
-                currentVersion = new SchemaVersion("01", "01", "0123");    
-                //Or Get the Minimum Possible Value for a 
-                currentVersion = SchemaVersion.MinValue;    
-
+                SchemaVersion currentVersion = sqlManager.GetCurrentSchemaVersion();
 
                 //Query the ScriptInfo Collection & Pull the Script Location for the Schema Directory...
                 var schemaScriptLocation = scriptInfo.ScriptLocations.SingleOrDefault(fd => fd.ContainsSchemaScripts);
@@ -54,11 +51,8 @@ namespace Parachute
                 //Pass that Off for processing.
                 if(schemaScriptLocation != null)
                 {
-                    ApplySchemaScriptsToDatabase(sqlManager, currentVersion, schemaScriptLocation);
+                    currentVersion = ApplySchemaChangesToDatabase(sqlManager, currentVersion, schemaScriptLocation);
                 }
-                
-
-
             }
 
 
@@ -70,10 +64,38 @@ namespace Parachute
             Trace.Flush();
         }
 
-        private void ApplySchemaScriptsToDatabase(SqlConnectionManager sqlManager, SchemaVersion currentVersion, ScriptLocation schemaScriptLocation)
+        private SchemaVersion ApplySchemaChangesToDatabase(SqlConnectionManager sqlManager, SchemaVersion currentVersion, ScriptLocation schemaScriptLocation)
         {
-            
+            //Ensure the scripts are ordered alphanumerically ascending
+            foreach(var script in schemaScriptLocation.ScriptFiles.OrderBy(s => s))
+            {
+                var fileSchemaVersion = GetSchemaVersionFromSchemaScriptFileName(script);
 
+                if (fileSchemaVersion > currentVersion)
+                {
+                    //If the file's schema version is greater than the currentVersion,
+                    TraceHelper.Info("Applying '{0}'", script);
+                    sqlManager.ExecuteSchemaFile(script, fileSchemaVersion);
+                    
+                    //Set that to be our new Current Version.
+                    currentVersion = fileSchemaVersion;
+                }
+                else
+                {
+                    TraceHelper.Verbose("Skipping '{0}' - Current Version is '{1}'", script, currentVersion);
+                }
+            }
+
+            //Return the new "Current" Schema Version
+            return currentVersion;
+
+        }
+
+        private SchemaVersion GetSchemaVersionFromSchemaScriptFileName(string fileName)
+        {
+            var file = Path.GetFileName(fileName);
+
+            return SchemaVersion.Parse(file);
         }
 
         private void ConfigureDatabase(SqlConnectionManager sqlManager)
