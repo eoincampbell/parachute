@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace Parachute
+namespace Parachute.Logic
 {
     public class ArgumentParser
     {

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Parachute.Logic;
 
 namespace Parachute
 {
@@ -31,7 +32,7 @@ namespace Parachute
 
                 if (!SqlConnectionManager.TestConnection(ConnectionString))
                 {
-                    ExitMessage = "Failed to Connect To Database. Exiting!";
+                    ExitMessage = "Failed to Connect To Database.!";
                     ExitNow = true;
                     return false;
                 }
@@ -49,7 +50,7 @@ namespace Parachute
                 ConnectionString = connstr;
                 if (!SqlConnectionManager.TestConnection(ConnectionString))
                 {
-                    ExitMessage = "Failed to Connect To Database. Exiting!";
+                    ExitMessage = "Failed to Connect To Database.";
                     ExitNow = true;
                     return false;
                 }
@@ -58,19 +59,29 @@ namespace Parachute
 
             if(string.IsNullOrEmpty(ConfigFilePath))
             {
-                ExitMessage = "Config File Path is not specified.\r\nYou must specify a configfile using the -f switch.\r\nExiting!";
+                ExitMessage = "Config File Path is not specified.\r\nYou must specify a configfile using the -f switch.";
                 ExitNow = true;
                 return false;
             }
 
             if (!File.Exists(ConfigFilePath))
             {
-                ExitMessage = "The specified config file does not exist.\r\nYou must specify a configfile using the -f switch.\r\nExiting!";
+                ExitMessage = "The specified config file does not exist.\r\nYou must specify a configfile using the -f switch.";
                 ExitNow = true;
                 return false;
             }
 
             return true;
+        }
+
+
+        public static ParachuteSettings GetSettings(string [] args)
+        {
+            var parser = new ArgumentParser(args);
+
+            var settings = parser.ParseSettings();
+
+            return settings;
         }
     }
 }
