@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entities\SchemaVersion.cs" />
     <Compile Include="Logic\ArgumentParser.cs" />
     <Compile Include="Entities\Script.cs" />
     <Compile Include="Entities\ScriptInformation.cs" />

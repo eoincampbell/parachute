@@ -11,7 +11,7 @@ namespace Parachute
 
         public ParachuteException(string message, Exception inner) : base(message, inner) { }
 
-        public ParachuteException(SerializationInfo info, StreamingContext context) : base(info,context) { }
+        public ParachuteException(SerializationInfo info, StreamingContext context) : base(info,context) { } 
 
     }
 }

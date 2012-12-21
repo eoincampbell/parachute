@@ -5,66 +5,59 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Parachute.Entities;
 using Parachute.Logic;
 
 namespace Parachute
 {
     public class Parachute
     {
+        private const string a = "-s (local) -d Sandbox -u sa -p epiosql --loglevel 4 --console --setup -f ConfigurationFiles\\configtest.xml";
+
+        public ParachuteSettings Settings { get; private set; }
+
         public void Start(string [] args)
         {
-            //string a = "--server (local) --database Sandbox --username sa --password epiosql --loglevel 4 --console --setup";
-            //const string a = "-s (local) -d Sandbox -u sa -p epiosql --loglevel 3 --console --setup -f ConfigExample.xml";
-            const string a = "-s (local) -d Sandbox -u sa -p epiosql --loglevel 4 --console --setup -f ConfigurationFiles\\configtest.xml";
-            //string a = "-c Server=(local);Database=master;Trusted_Connection=True;MultipleActiveResultSets=true; -v";
-            //string a = "--version";
-
             //Parses command line settings to decide how to run application.
-            var settings = ParachuteSettings.GetSettings(a.Split(' '));
-            if (settings.ExitNow || !settings.IsValid())
+            var Settings = ParachuteSettings.GetSettings(a.Split(' '));
+            if (Settings.ExitNow || !Settings.IsValid())
             {
-                TraceHelper.Warning(settings.ExitMessage);
+                TraceHelper.Warning(Settings.ExitMessage);
                 throw new ParachuteException("Aborting. Settings error.");
             }
 
-            //Start Doing Work...
-            var loader = new ScriptInformationLoader(settings.ConfigFilePath);
+            //Validate Configuration File.
+            var loader = new ScriptInformationLoader(Settings.ConfigFilePath);
             var scriptInfo = loader.Load();
 
-            using (var sqlManager = new SqlConnectionManager(settings.ConnectionString))
+
+            //Connect To Database
+            using (var sqlManager = new SqlConnectionManager(Settings.ConnectionString))
             {
                 sqlManager.InfoOrErrorMessage += SqlManagerOnInfoOrErrorMessage;
 
-                //Check if the database is configured for Parachute (i.e. have the change logs been added).
-                var databaseIsConfigured = sqlManager.IsDatabaseConfiguredForParachute();
+                ConfigureDatabase(sqlManager);
+                
+                //Logic Flow from here down...
 
-                if (!databaseIsConfigured)
+                //Query the Schema Change Log Tables.
+                SchemaVersion currentVersion ;
+                //Get the the MaxVersion from the Table...
+                currentVersion = new SchemaVersion("01", "01", "0123");    
+                //Or Get the Minimum Possible Value for a 
+                currentVersion = SchemaVersion.MinValue;    
+
+
+                //Query the ScriptInfo Collection & Pull the Script Location for the Schema Directory...
+                var schemaScriptLocation = scriptInfo.ScriptLocations.SingleOrDefault(fd => fd.ContainsSchemaScripts);
+                //If there is one.
+                //Pass that Off for processing.
+                if(schemaScriptLocation != null)
                 {
-                    //If not... are we in setup mode
-                    if (settings.SetupDatabase)
-                    {
-                        //If yes, create the db change tracking table
-                        if (!sqlManager.SetupDatabase())
-                        {
-                            throw new ParachuteException("Aborting. Failed to setup database");
-                        }
-                    }
-                    else
-                    {
-                        //If not, exit 
-                        TraceHelper.Error("Database is not configured for Parachute");
-                        TraceHelper.Error("Re-run application with --setup switch to install Parachute ChangeLog Tables");
-                        throw new ParachuteException("Aborting. Database does not support Parachute");
-                    }
+                    ApplySchemaScriptsToDatabase(sqlManager, currentVersion, schemaScriptLocation);
                 }
+                
 
-                //Next... Apply the Schema Changes... Schema Files are run-once only
-
-                //Load up the list of files/folders to be executed ?
-                //Start iterating through them
-                //Execute them in order.
-
-                int x = 1 + 2;
 
             }
 
@@ -75,6 +68,33 @@ namespace Parachute
 
         exitpoint:
             Trace.Flush();
+        }
+
+        private void ApplySchemaScriptsToDatabase(SqlConnectionManager sqlManager, SchemaVersion currentVersion, ScriptLocation schemaScriptLocation)
+        {
+            
+
+        }
+
+        private void ConfigureDatabase(SqlConnectionManager sqlManager)
+        {
+            //Check if the database is configured for Parachute (i.e. have the change logs been added).
+            if (sqlManager.IsDatabaseConfiguredForParachute()) return;
+            
+            //If not... are we in setup mode
+            if (Settings.SetupDatabase)
+            {
+                if (!sqlManager.SetupDatabase())
+                {
+                    throw new ParachuteException("Aborting. Failed to setup database");
+                }
+            }
+            else
+            {
+                TraceHelper.Error("Database is not configured for Parachute");
+                TraceHelper.Error("Re-run application with --setup switch to install Parachute ChangeLog Tables");
+                throw new ParachuteException("Aborting. Database does not support Parachute");
+            }
         }
 
         private static void SqlManagerOnInfoOrErrorMessage(object sender, SqlError sqlError)
