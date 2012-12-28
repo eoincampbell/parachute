@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Parachute
+namespace Parachute.Exceptions
 {
     public class ParachuteException : Exception
     {

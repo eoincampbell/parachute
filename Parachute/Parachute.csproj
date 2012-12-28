@@ -61,7 +61,7 @@
     <Compile Include="Entities\ScriptLocation.cs" />
     <Compile Include="Entities\Variable.cs" />
     <Compile Include="Parachute.cs" />
-    <Compile Include="ParachuteException.cs" />
+    <Compile Include="Exceptions\ParachuteException.cs" />
     <Compile Include="ParachuteSettings.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

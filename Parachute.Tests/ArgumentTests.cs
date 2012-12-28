@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Parachute.Exceptions;
 using Parachute.Utilities;
 
 namespace Parachute.Tests

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Parachute.DataAccess;
 using Parachute.Entities;
+using Parachute.Exceptions;
 using Parachute.Utilities;
 
 namespace Parachute

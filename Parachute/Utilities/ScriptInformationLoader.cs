@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Parachute.Entities;
+using Parachute.Exceptions;
 
 namespace Parachute.Utilities
 {
