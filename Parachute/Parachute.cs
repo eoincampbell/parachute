@@ -12,40 +12,38 @@ using Parachute.Utilities;
 
 namespace Parachute
 {
-    public class Parachute
+    public class Parachute : IDisposable
     {
         private const string a = "-s (local) -d Sandbox -u sa -p epiosql --loglevel 4 --console --setup -f ConfigurationFiles\\configtest.xml";
 
-        public ParachuteSettings Settings { get; private set; }
+        public ParachuteSettings Settings { get; set; }
+        public SqlConnectionManager SqlManager { get; set; }
+        public ScriptInformationLoader ScriptInfoLoader { get; set; }
 
-        public void Start(string [] args)
+        public Parachute(string [] args)
         {
-            //Parses command line settings to decide how to run application.
             Settings = ParachuteSettings.GetSettings(a.Split(' '));
-            if (Settings.ExitNow || !Settings.IsValid())
-            {
-                TraceHelper.Warning(Settings.ExitMessage);
-                throw new ParachuteException("Aborting. Settings error.");
-            }
+            Settings.Validate();
 
-            //Validate Configuration File.
-            var loader = new ScriptInformationLoader(Settings.ConfigFilePath);
-            var scriptInfo = loader.Load();
+            ScriptInfoLoader = new ScriptInformationLoader(Settings.ConfigFilePath);
+
+            SqlManager = new SqlConnectionManager(Settings.ConnectionString);
+        }
+
+        public void Run()
+        {
+            var scriptInfo = ScriptInfoLoader.Load();
 
 
-            //Connect To Database
-            using (var sqlManager = new SqlConnectionManager(Settings.ConnectionString))
-            {
-                sqlManager.InfoOrErrorMessage += SqlManagerOnInfoOrErrorMessage;
+            SqlManager.InfoOrErrorMessage += SqlManagerOnInfoOrErrorMessage;
 
-                //Setup the database if needs be.
-                var currentVersion = ConfigureDatabase(sqlManager);
+            //Setup the database if needs be.
+            var currentVersion = ConfigureDatabase(SqlManager);
 
-                currentVersion = ApplySchemaChangesToDatabase(sqlManager, currentVersion, scriptInfo);
+            currentVersion = ApplySchemaChangesToDatabase(SqlManager, currentVersion, scriptInfo);
 
-                ApplyScriptsToDatabase(sqlManager, currentVersion, scriptInfo);
-            }
-
+            ApplyScriptsToDatabase(SqlManager, currentVersion, scriptInfo);
+            
             Trace.Flush();
         }
 
@@ -142,6 +140,11 @@ namespace Parachute
             {
                 TraceHelper.Info("{0}", error.Message);
             }
+        }
+
+        public void Dispose()
+        {
+            SqlManager.Dispose();
         }
     }
 }

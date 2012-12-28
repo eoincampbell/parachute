@@ -20,11 +20,7 @@ namespace Parachute
         public string ConfigFilePath { get; set; }
         public bool SetupDatabase { get; set; }
 
-        public bool ExitNow { get; set; }
-        public string ExitMessage { get; set; }
-
-
-        public bool IsValid()
+        public void Validate()
         {
             if (!string.IsNullOrEmpty(ConnectionString))
             {
@@ -33,9 +29,7 @@ namespace Parachute
 
                 if (!SqlConnectionManager.TestConnection(ConnectionString))
                 {
-                    ExitMessage = "Failed to Connect To Database.!";
-                    ExitNow = true;
-                    return false;
+                    throw new ParachuteAbortException("Failed to Connect To Database.");
                 }
             }
             else
@@ -51,28 +45,22 @@ namespace Parachute
                 ConnectionString = connstr;
                 if (!SqlConnectionManager.TestConnection(ConnectionString))
                 {
-                    ExitMessage = "Failed to Connect To Database.";
-                    ExitNow = true;
-                    return false;
+                    throw new ParachuteAbortException("Failed to Connect To Database.");
                 }
             }
 
 
             if(string.IsNullOrEmpty(ConfigFilePath))
             {
-                ExitMessage = "Config File Path is not specified.\r\nYou must specify a configfile using the -f switch.";
-                ExitNow = true;
-                return false;
+                throw new ParachuteAbortException(
+                    "Config File Path is not specified.\r\nYou must specify a configfile using the -f switch.");
             }
 
             if (!File.Exists(ConfigFilePath))
             {
-                ExitMessage = "The specified config file does not exist.\r\nYou must specify a configfile using the -f switch.";
-                ExitNow = true;
-                return false;
+                throw new ParachuteAbortException(
+                    "The specified config file does not exist.\r\nYou must specify a configfile using the -f switch.");
             }
-
-            return true;
         }
 
 
