@@ -10,21 +10,21 @@ namespace Parachute.Tests
     public class ArgumentTests
     {
         [TestMethod]
+        [ExpectedException(typeof(ParachuteAbortException))]
         public void Pass_Version_Argument_Should_Return_Null()
         {
             var args = new[] { "--version" };
             var ap = new ArgumentParser(args);
             var settings = ap.ParseSettings();
-            Assert.IsNull(settings);
         }
 
         [TestMethod]
+        [ExpectedException(typeof(ParachuteAbortException))]
         public void Pass_Help_Argument_Should_Return_Null()
         {
             var args = new[] { "--help" };
             var ap = new ArgumentParser(args);
             var settings = ap.ParseSettings();
-            Assert.IsNull(settings);
         }
 
         [TestMethod]
@@ -40,7 +40,7 @@ namespace Parachute.Tests
         [TestMethod]
         public void Pass_Source_Argument_Should_Return_Value()
         {
-            var args = new[] { "--source", "C:\\Path\\To\\Files\\" };
+            var args = new[] { "--configfile", "C:\\Path\\To\\Files\\" };
             var ap = new ArgumentParser(args);
             var settings = ap.ParseSettings();
             Assert.IsNotNull(settings);
@@ -50,7 +50,7 @@ namespace Parachute.Tests
         [TestMethod]
         public void Pass_Short_Source_Argument_Should_Return_Value()
         {
-            var args = new[] { "-r", "C:\\Path\\To\\Files\\" };
+            var args = new[] { "-f", "C:\\Path\\To\\Files\\" };
             var ap = new ArgumentParser(args);
             var settings = ap.ParseSettings();
             Assert.IsNotNull(settings);
@@ -156,30 +156,5 @@ namespace Parachute.Tests
             Assert.IsNotNull(settings);
             Assert.AreEqual("CONNSTR", settings.ConnectionString);
         }
-
-        [TestMethod]
-        public void Pass_Verbose_Argument_Should_Return_Value()
-        {
-            Trace.Listeners.Clear();
-            var args = new[] { "--verbose" };
-            var ap = new ArgumentParser(args);
-            var settings = ap.ParseSettings();
-            Assert.IsNotNull(settings);
-            Assert.AreEqual(1, Trace.Listeners.Count);
-        }
-
-
-        [TestMethod]
-        public void Pass_Short_Verbose_Argument_Should_Return_Value()
-        {
-            Trace.Listeners.Clear();
-            var args = new[] { "-v" };
-            var ap = new ArgumentParser(args);
-            var settings = ap.ParseSettings();
-            Assert.IsNotNull(settings);
-            Assert.AreEqual(1, Trace.Listeners.Count);
-        }
-
-
     }
 }

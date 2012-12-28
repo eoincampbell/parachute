@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -36,9 +37,7 @@ namespace Parachute.Utilities
 
             if (!Arguments.Any())
             {
-                settings.ExitMessage = ResourceHelper.GetUsageMessage();
-                settings.ExitNow = true;
-                return settings;
+                throw new ParachuteAbortException(ResourceHelper.GetUsageMessage());
             }
 
             ConfigureOutput();
@@ -75,13 +74,9 @@ namespace Parachute.Utilities
                 switch (Arguments[i])
                 {
                     case "--help":
-                        settings.ExitMessage = ResourceHelper.GetFullUsageMessage();
-                        settings.ExitNow = true;
-                        return;
+                        throw new ParachuteAbortException(ResourceHelper.GetFullUsageMessage());
                     case "--version":
-                        settings.ExitMessage = ResourceHelper.GetVersionInformationMessage();
-                        settings.ExitNow = true;
-                        return;
+                        throw new ParachuteAbortException(ResourceHelper.GetVersionInformationMessage());
                     case "-s":
                     case "--server":
                         settings.Server = Arguments[++i];
