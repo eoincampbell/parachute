@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 
-namespace Parachute.Logic
+namespace Parachute.Utilities
 {
     public class ArgumentParser
     {

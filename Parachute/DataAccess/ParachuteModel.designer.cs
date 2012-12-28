@@ -85,7 +85,7 @@ namespace Parachute.DataAccess
 		}
 	}
 	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="[dbo].[__ParachuteAppliedScriptsLogs]")]
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.[__ParachuteAppliedScriptsLogs]")]
 	public partial class ParachuteAppliedScriptsLog : INotifyPropertyChanging, INotifyPropertyChanged
 	{
 		
@@ -97,9 +97,7 @@ namespace Parachute.DataAccess
 		
 		private string _Hash;
 		
-		private int _ParachuteSchemaChangeLogId;
-		
-		private EntityRef<ParachuteSchemaChangeLog> _ParachuteSchemaChangeLog;
+		private string _SchemaVersion;
 		
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -111,13 +109,12 @@ namespace Parachute.DataAccess
     partial void OnScriptNameChanged();
     partial void OnHashChanging(string value);
     partial void OnHashChanged();
-    partial void OnParachuteSchemaChangeLogIdChanging(int value);
-    partial void OnParachuteSchemaChangeLogIdChanged();
+    partial void OnSchemaVersionChanging(string value);
+    partial void OnSchemaVersionChanged();
     #endregion
 		
 		public ParachuteAppliedScriptsLog()
 		{
-			this._ParachuteSchemaChangeLog = default(EntityRef<ParachuteSchemaChangeLog>);
 			OnCreated();
 		}
 		
@@ -181,60 +178,22 @@ namespace Parachute.DataAccess
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ParachuteSchemaChangeLogId", DbType="Int NOT NULL")]
-		public int ParachuteSchemaChangeLogId
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_SchemaVersion", DbType="NVarChar(10) NOT NULL", CanBeNull=false)]
+		public string SchemaVersion
 		{
 			get
 			{
-				return this._ParachuteSchemaChangeLogId;
+				return this._SchemaVersion;
 			}
 			set
 			{
-				if ((this._ParachuteSchemaChangeLogId != value))
+				if ((this._SchemaVersion != value))
 				{
-					if (this._ParachuteSchemaChangeLog.HasLoadedOrAssignedValue)
-					{
-						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
-					}
-					this.OnParachuteSchemaChangeLogIdChanging(value);
+					this.OnSchemaVersionChanging(value);
 					this.SendPropertyChanging();
-					this._ParachuteSchemaChangeLogId = value;
-					this.SendPropertyChanged("ParachuteSchemaChangeLogId");
-					this.OnParachuteSchemaChangeLogIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="__ParachuteSchemaChangeLog___ParachuteAppliedScriptsLog", Storage="_ParachuteSchemaChangeLog", ThisKey="ParachuteSchemaChangeLogId", OtherKey="ParachuteSchemaChangeLogId", IsForeignKey=true)]
-		public ParachuteSchemaChangeLog ParachuteSchemaChangeLog
-		{
-			get
-			{
-				return this._ParachuteSchemaChangeLog.Entity;
-			}
-			set
-			{
-				ParachuteSchemaChangeLog previousValue = this._ParachuteSchemaChangeLog.Entity;
-				if (((previousValue != value) 
-							|| (this._ParachuteSchemaChangeLog.HasLoadedOrAssignedValue == false)))
-				{
-					this.SendPropertyChanging();
-					if ((previousValue != null))
-					{
-						this._ParachuteSchemaChangeLog.Entity = null;
-						previousValue.ParachuteAppliedScriptsLogs.Remove(this);
-					}
-					this._ParachuteSchemaChangeLog.Entity = value;
-					if ((value != null))
-					{
-						value.ParachuteAppliedScriptsLogs.Add(this);
-						this._ParachuteSchemaChangeLogId = value.ParachuteSchemaChangeLogId;
-					}
-					else
-					{
-						this._ParachuteSchemaChangeLogId = default(int);
-					}
-					this.SendPropertyChanged("ParachuteSchemaChangeLog");
+					this._SchemaVersion = value;
+					this.SendPropertyChanged("SchemaVersion");
+					this.OnSchemaVersionChanged();
 				}
 			}
 		}
@@ -260,7 +219,7 @@ namespace Parachute.DataAccess
 		}
 	}
 	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="[dbo].[__ParachuteSchemaChangeLogs]")]
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.[__ParachuteSchemaChangeLogs]")]
 	public partial class ParachuteSchemaChangeLog : INotifyPropertyChanging, INotifyPropertyChanged
 	{
 		
@@ -275,8 +234,6 @@ namespace Parachute.DataAccess
 		private string _PointReleaseNumber;
 		
 		private string _ScriptName;
-		
-		private EntitySet<ParachuteAppliedScriptsLog> _ParachuteAppliedScriptsLogs;
 		
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -296,7 +253,6 @@ namespace Parachute.DataAccess
 		
 		public ParachuteSchemaChangeLog()
 		{
-			this._ParachuteAppliedScriptsLogs = new EntitySet<ParachuteAppliedScriptsLog>(new Action<ParachuteAppliedScriptsLog>(this.attach_ParachuteAppliedScriptsLogs), new Action<ParachuteAppliedScriptsLog>(this.detach_ParachuteAppliedScriptsLogs));
 			OnCreated();
 		}
 		
@@ -400,19 +356,6 @@ namespace Parachute.DataAccess
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="__ParachuteSchemaChangeLog___ParachuteAppliedScriptsLog", Storage="_ParachuteAppliedScriptsLogs", ThisKey="ParachuteSchemaChangeLogId", OtherKey="ParachuteSchemaChangeLogId")]
-		public EntitySet<ParachuteAppliedScriptsLog> ParachuteAppliedScriptsLogs
-		{
-			get
-			{
-				return this._ParachuteAppliedScriptsLogs;
-			}
-			set
-			{
-				this._ParachuteAppliedScriptsLogs.Assign(value);
-			}
-		}
-		
 		public event PropertyChangingEventHandler PropertyChanging;
 		
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -431,18 +374,6 @@ namespace Parachute.DataAccess
 			{
 				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 			}
-		}
-		
-		private void attach_ParachuteAppliedScriptsLogs(ParachuteAppliedScriptsLog entity)
-		{
-			this.SendPropertyChanging();
-			entity.ParachuteSchemaChangeLog = this;
-		}
-		
-		private void detach_ParachuteAppliedScriptsLogs(ParachuteAppliedScriptsLog entity)
-		{
-			this.SendPropertyChanging();
-			entity.ParachuteSchemaChangeLog = null;
 		}
 	}
 }

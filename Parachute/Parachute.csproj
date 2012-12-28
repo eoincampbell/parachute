@@ -55,7 +55,7 @@
       <DependentUpon>ParachuteModel.dbml</DependentUpon>
     </Compile>
     <Compile Include="Entities\SchemaVersion.cs" />
-    <Compile Include="Logic\ArgumentParser.cs" />
+    <Compile Include="Utilities\ArgumentParser.cs" />
     <Compile Include="Entities\Script.cs" />
     <Compile Include="Entities\ScriptInformation.cs" />
     <Compile Include="Entities\ScriptLocation.cs" />
@@ -65,7 +65,8 @@
     <Compile Include="ParachuteSettings.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Logic\ResourceHelper.cs" />
+    <Compile Include="Utilities\Extensions.cs" />
+    <Compile Include="Utilities\ResourceHelper.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -76,9 +77,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Parachute.resx</DependentUpon>
     </Compile>
-    <Compile Include="Logic\ScriptInformationLoader.cs" />
+    <Compile Include="Utilities\ScriptInformationLoader.cs" />
     <Compile Include="DataAccess\SqlConnectionManager.cs" />
-    <Compile Include="Logic\TraceHelper.cs" />
+    <Compile Include="Utilities\TraceHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DataAccess\ParachuteModel.dbml.layout">

@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Parachute.DataAccess;
 using Parachute.Entities;
-using Parachute.Logic;
+using Parachute.Utilities;
 
 namespace Parachute
 {
@@ -38,51 +38,49 @@ namespace Parachute
             {
                 sqlManager.InfoOrErrorMessage += SqlManagerOnInfoOrErrorMessage;
 
-                ConfigureDatabase(sqlManager);
-                
-                //Logic Flow from here down...
+                //Setup the database if needs be.
+                var currentVersion = ConfigureDatabase(sqlManager);
 
-                //Query the Schema Change Log Tables.
-                SchemaVersion currentVersion = sqlManager.GetCurrentSchemaVersion();
+                currentVersion = ApplySchemaChangesToDatabase(sqlManager, currentVersion, scriptInfo);
 
-                //Query the ScriptInfo Collection & Pull the Script Location for the Schema Directory...
-                var schemaScriptLocation = scriptInfo.ScriptLocations.SingleOrDefault(fd => fd.ContainsSchemaScripts);
-                //If there is one.
-                //Pass that Off for processing.
-                if(schemaScriptLocation != null)
-                {
-                    currentVersion = ApplySchemaChangesToDatabase(sqlManager, currentVersion, schemaScriptLocation);
-                }
+                ApplyScriptsToDatabase(sqlManager, currentVersion, scriptInfo);
             }
 
-
-
-
-
-
-        exitpoint:
             Trace.Flush();
         }
 
-        private SchemaVersion ApplySchemaChangesToDatabase(SqlConnectionManager sqlManager, SchemaVersion currentVersion, ScriptLocation schemaScriptLocation)
+        private void ApplyScriptsToDatabase(SqlConnectionManager sqlManager, SchemaVersion currentVersion, ScriptInformation scriptInfo)
         {
-            //Ensure the scripts are ordered alphanumerically ascending
-            foreach(var script in schemaScriptLocation.ScriptFiles.OrderBy(s => s))
-            {
-                var fileSchemaVersion = GetSchemaVersionFromSchemaScriptFileName(script);
+            
 
-                if (fileSchemaVersion > currentVersion)
+        }
+
+        private SchemaVersion ApplySchemaChangesToDatabase(SqlConnectionManager sqlManager, SchemaVersion currentVersion, ScriptInformation scriptInfo)
+        {
+            //Query the ScriptInfo Collection & Pull the Script Location for the Schema Directory...
+            var schemaScriptLocation = scriptInfo.ScriptLocations.SingleOrDefault(fd => fd.ContainsSchemaScripts);
+            //If there is one.
+            //Pass that Off for processing.
+            if (schemaScriptLocation != null)
+            {
+                //Ensure the scripts are ordered alphanumerically ascending
+                foreach (var script in schemaScriptLocation.ScriptFiles.OrderBy(s => s))
                 {
-                    //If the file's schema version is greater than the currentVersion,
-                    TraceHelper.Info("Applying '{0}'", script);
-                    sqlManager.ExecuteSchemaFile(script, fileSchemaVersion);
-                    
-                    //Set that to be our new Current Version.
-                    currentVersion = fileSchemaVersion;
-                }
-                else
-                {
-                    TraceHelper.Verbose("Skipping '{0}' - Current Version is '{1}'", script, currentVersion);
+                    var fileSchemaVersion = script.ToSchemaVersion();
+
+                    if (fileSchemaVersion > currentVersion)
+                    {
+                        //If the file's schema version is greater than the currentVersion,
+                        TraceHelper.Info("Applying '{0}'", script);
+                        sqlManager.ExecuteSchemaFile(script, fileSchemaVersion);
+
+                        //Set that to be our new Current Version.
+                        currentVersion = fileSchemaVersion;
+                    }
+                    else
+                    {
+                        TraceHelper.Verbose("Skipping '{0}' - Current Version is '{1}'", script, currentVersion);
+                    }
                 }
             }
 
@@ -91,20 +89,11 @@ namespace Parachute
 
         }
 
-        private SchemaVersion GetSchemaVersionFromSchemaScriptFileName(string fileName)
-        {
-            var file = Path.GetFileName(fileName);
+       
 
-            return SchemaVersion.Parse(file);
-        }
-
-        private void ConfigureDatabase(SqlConnectionManager sqlManager)
+        private SchemaVersion ConfigureDatabase(SqlConnectionManager sqlManager)
         {
-            //Check if the database is configured for Parachute (i.e. have the change logs been added).
-            if (sqlManager.IsDatabaseConfiguredForParachute()) return;
-            
-            //If not... are we in setup mode
-            if (Settings.SetupDatabase)
+            if (!sqlManager.IsDatabaseConfiguredForParachute() && Settings.SetupDatabase)
             {
                 if (!sqlManager.SetupDatabase())
                 {
@@ -117,6 +106,8 @@ namespace Parachute
                 TraceHelper.Error("Re-run application with --setup switch to install Parachute ChangeLog Tables");
                 throw new ParachuteException("Aborting. Database does not support Parachute");
             }
+
+            return sqlManager.GetCurrentSchemaVersion();
         }
 
         private static void SqlManagerOnInfoOrErrorMessage(object sender, SqlError sqlError)

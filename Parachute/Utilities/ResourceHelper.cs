@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 
-namespace Parachute.Logic
+namespace Parachute.Utilities
 {
     public class ResourceHelper
     {

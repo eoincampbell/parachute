@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Parachute.DataAccess;
-using Parachute.Logic;
+using Parachute.Utilities;
 
 namespace Parachute
 {

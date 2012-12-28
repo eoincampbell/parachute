@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Parachute.Entities;
 
-namespace Parachute.Logic
+namespace Parachute.Utilities
 {
     public class ScriptInformationLoader
     {

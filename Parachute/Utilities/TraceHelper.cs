@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Parachute.Logic
+namespace Parachute.Utilities
 {
     public static class TraceHelper
     {

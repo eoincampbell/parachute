@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Data.SqlClient;
 using Parachute.Entities;
-using Parachute.Logic;
+using Parachute.Utilities;
 
 namespace Parachute.DataAccess
 {
@@ -13,9 +13,8 @@ namespace Parachute.DataAccess
     {
         private const string ApplicationName = "Parachute";
         private readonly SqlConnection _connection;
-        private readonly string _connectionString;
         public event EventHandler<SqlError> InfoOrErrorMessage;
-        private static Regex _splitterRegex = new Regex("^\\s*GO\\s*$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        private static readonly Regex SplitterRegex = new Regex("^\\s*GO\\s*$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
 
         #region Event Handling
 
@@ -39,7 +38,6 @@ namespace Parachute.DataAccess
 
         public SqlConnectionManager(string connectionString)
         {
-            _connectionString = connectionString;
             _connection = new SqlConnection(connectionString);
             if (_connection.State == ConnectionState.Broken || _connection.State == ConnectionState.Closed)
             {
@@ -67,7 +65,7 @@ namespace Parachute.DataAccess
         public void ExecuteSchemaFile(string sqlFile, SchemaVersion version)
         {
             var sql = GetSqlScriptFromFile(sqlFile);
-            var blocksOfSql = _splitterRegex.Split(sql);
+            var blocksOfSql = SplitterRegex.Split(sql);
 
             using (var transaction = _connection.BeginTransaction())
             {
@@ -103,11 +101,13 @@ namespace Parachute.DataAccess
                     }
                 }
 
-                using(var dc = new ParachuteModelDataContext(_connection))
+
+
+                using (var dc = new ParachuteModelDataContext(_connection))
                 {
                     dc.Transaction = transaction;
 
-                    var entry = new ParachuteSchemaChangeLog()
+                    var entry = new ParachuteSchemaChangeLog
                         {
                             MajorReleaseNumber = version.MajorVersion,
                             MinorReleaseNumber = version.MinorVersion,
@@ -120,7 +120,7 @@ namespace Parachute.DataAccess
                     {
                         dc.SubmitChanges();
                     }
-                    catch(SqlException sqlEx)
+                    catch (SqlException sqlEx)
                     {
                         foreach (SqlError error in sqlEx.Errors)
                         {
@@ -137,6 +137,7 @@ namespace Parachute.DataAccess
                 }
 
                 transaction.Commit();
+
             }
 
         }
@@ -144,7 +145,7 @@ namespace Parachute.DataAccess
         public void ExecuteScriptFile(string sqlFile)
         {
             var sql = GetSqlScriptFromFile(Path.GetFileName(sqlFile));
-            var blocksOfSql = _splitterRegex.Split(sql);
+            var blocksOfSql = SplitterRegex.Split(sql);
 
             using (var transaction = _connection.BeginTransaction())
             {
@@ -265,7 +266,7 @@ namespace Parachute.DataAccess
 
         public SchemaVersion GetCurrentSchemaVersion()
         {
-            using(var pmdc = new ParachuteModelDataContext(_connection))
+            using (var pmdc = new ParachuteModelDataContext(_connection))
             {
                 var result = pmdc.ParachuteSchemaChangeLogs
                     .OrderByDescending(l => l.MajorReleaseNumber)
@@ -273,8 +274,8 @@ namespace Parachute.DataAccess
                     .ThenByDescending(l => l.PointReleaseNumber)
                     .FirstOrDefault();
 
-                return result == null 
-                    ? SchemaVersion.MinValue 
+                return result == null
+                    ? SchemaVersion.MinValue
                     : new SchemaVersion(result.MajorReleaseNumber, result.MinorReleaseNumber, result.PointReleaseNumber);
             }
         }
@@ -285,13 +286,14 @@ namespace Parachute.DataAccess
         {
             try
             {
-                var scsb = new SqlConnectionStringBuilder();
-
-                scsb.ApplicationName = ApplicationName;
-                scsb.DataSource = server;
-                scsb.InitialCatalog = database;
-                scsb.UserID = username;
-                scsb.Password = password;
+                var scsb = new SqlConnectionStringBuilder
+                    {
+                        ApplicationName = ApplicationName,
+                        DataSource = server,
+                        InitialCatalog = database,
+                        UserID = username,
+                        Password = password
+                    };
 
                 return scsb.ConnectionString;
             }

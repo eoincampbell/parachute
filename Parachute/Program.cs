@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Data.SqlClient;
 using System.Diagnostics;
-using Parachute.Logic;
+using Parachute.Utilities;
 
 namespace Parachute
 {
     public class Program
-    {
-        
+    {   
         static int Main(string[] args)
         {
             try
@@ -23,11 +22,6 @@ namespace Parachute
                 Console.Read();
                 return 1;
             }
-
-            
-
         }
-
-       
     }
 }
