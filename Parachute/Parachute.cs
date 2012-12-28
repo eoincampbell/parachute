@@ -49,16 +49,31 @@ namespace Parachute
             Trace.Flush();
         }
 
-        private void ApplyScriptsToDatabase(SqlConnectionManager sqlManager, SchemaVersion currentVersion, ScriptInformation scriptInfo)
+        private static void ApplyScriptsToDatabase(SqlConnectionManager sqlManager, SchemaVersion currentVersion, ScriptInformation scriptInfo)
         {
-            
+            foreach (var location in scriptInfo.ScriptLocations.Where(sl => !sl.ContainsSchemaScripts))
+            {
+                //foreach file in the location
+                    // is directory marked as "runOnce"
+                        //if yes
+                            //check if file applied before in a previous version.
+                                //if no
+                                    // Apply that file & log it
+                                //if yes
+                                    //skip it
+                        //if not
+                            //run that file regardless
 
+                
+                //foreach directory in the location
+                    // Recursively repeat.
+            }
         }
 
-        private SchemaVersion ApplySchemaChangesToDatabase(SqlConnectionManager sqlManager, SchemaVersion currentVersion, ScriptInformation scriptInfo)
+        private static SchemaVersion ApplySchemaChangesToDatabase(SqlConnectionManager sqlManager, SchemaVersion currentVersion, ScriptInformation scriptInfo)
         {
             //Query the ScriptInfo Collection & Pull the Script Location for the Schema Directory...
-            var schemaScriptLocation = scriptInfo.ScriptLocations.SingleOrDefault(fd => fd.ContainsSchemaScripts);
+            var schemaScriptLocation = scriptInfo.ScriptLocations.FirstOrDefault(fd => fd.ContainsSchemaScripts);
             //If there is one.
             //Pass that Off for processing.
             if (schemaScriptLocation != null)
