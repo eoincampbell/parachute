@@ -185,14 +185,35 @@ namespace Parachute.Entities
             return first.CompareTo(second) > 0 || first.Equals(second);
         }
 
-        public  static bool operator == (SchemaVersion first, SchemaVersion second)
+        public static bool operator == (SchemaVersion first, SchemaVersion second)
         {
-            return first != null && first.Equals(second);
+            if (ReferenceEquals(first, second))
+            {
+                return true;
+            }
+
+            // If one is null, but not both, return false.
+            if (((object)first == null) || ((object)second == null))
+            {
+                return false;
+            }
+
+            return first.Equals(second);
         }
 
         public static bool operator !=(SchemaVersion first, SchemaVersion second)
         {
-            return first != null && !first.Equals(second);
+            if (ReferenceEquals(first, second))
+            {
+                return false;
+            }
+
+            if (((object)first == null) || ((object)second == null))
+            {
+                return true;
+            }
+
+            return !first.Equals(second);
         }
 
         /// <summary>
