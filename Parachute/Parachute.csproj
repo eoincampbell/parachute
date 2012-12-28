@@ -55,6 +55,7 @@
       <DependentUpon>ParachuteModel.dbml</DependentUpon>
     </Compile>
     <Compile Include="Entities\SchemaVersion.cs" />
+    <Compile Include="Exceptions\ParachuteAbortException.cs" />
     <Compile Include="Utilities\ArgumentParser.cs" />
     <Compile Include="Entities\Script.cs" />
     <Compile Include="Entities\ScriptInformation.cs" />
