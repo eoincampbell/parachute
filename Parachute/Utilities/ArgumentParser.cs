@@ -4,15 +4,32 @@ using System.Linq;
 
 namespace Parachute.Utilities
 {
+    /// <summary>
+    /// Utility class for parsing command line arguments and generating a settings object.
+    /// </summary>
     public class ArgumentParser
     {
+        /// <summary>
+        /// Gets or sets the arguments.
+        /// </summary>
+        /// <value>
+        /// The arguments.
+        /// </value>
         private List<string> Arguments { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ArgumentParser" /> class.
+        /// </summary>
+        /// <param name="args">The args.</param>
         public ArgumentParser(IEnumerable<string> args)
         {
             Arguments = args.ToList();
         }
 
+        /// <summary>
+        /// Parses the settings.
+        /// </summary>
+        /// <returns>A populated <see cref="ParachuteSettings"/> objects</returns>
         public ParachuteSettings ParseSettings()
         {
             var settings = new ParachuteSettings();
@@ -31,16 +48,26 @@ namespace Parachute.Utilities
             return settings;
         }
 
-        private TraceLevel GetLevel(string s)
+
+        /// <summary>
+        /// Gets the trace level.
+        /// </summary>
+        /// <param name="setting">The input setting.</param>
+        /// <returns></returns>
+        private static TraceLevel GetLevel(string setting)
         {
             int level;
-            if(int.TryParse(s, out level) && level >= 1 && level <= 4)
+            if (int.TryParse(setting, out level) && level >= 1 && level <= 4)
             {
                 return (TraceLevel) level;
             }
             return TraceLevel.Info;
         }
 
+        /// <summary>
+        /// Configures the settings.
+        /// </summary>
+        /// <param name="settings">The settings.</param>
         private void ConfigureSettings(ref ParachuteSettings settings)
         {
             for (var i = 0; i < Arguments.Count(); i++)
@@ -86,6 +113,9 @@ namespace Parachute.Utilities
             }
         }
 
+        /// <summary>
+        /// Configures the output mechanism.
+        /// </summary>
         private void ConfigureOutput()
         {
             for (var i = 0; i < Arguments.Count(); i++)

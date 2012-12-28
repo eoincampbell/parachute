@@ -7,8 +7,17 @@ using Parachute.Entities;
 
 namespace Parachute.Utilities
 {
+    /// <summary>
+    /// Utility Class for parsing & loading the script information xml file.
+    /// </summary>
     public class ScriptInformationLoader
     {
+        /// <summary>
+        /// Gets the name of the file.
+        /// </summary>
+        /// <value>
+        /// The name of the file.
+        /// </value>
         public string FileName { get; private set; }
 
         public ScriptInformationLoader  (string filename)
@@ -16,6 +25,11 @@ namespace Parachute.Utilities
             FileName = filename;
         }
 
+        /// <summary>
+        /// Loads the data from file.
+        /// </summary>
+        /// <returns>The <see cref="ScriptInformation"/> object.</returns>
+        /// <exception cref="ParachuteException">throws if xml cannot be parsed or loaded.</exception>
         private ScriptInformation LoadFromFile()
         {
             ScriptInformation info;
@@ -40,6 +54,10 @@ namespace Parachute.Utilities
             return info;
         }
 
+        /// <summary>
+        /// Loads this instance.
+        /// </summary>
+        /// <returns>The <see cref="ScriptInformation"/> object.</returns>
         public ScriptInformation Load()
         {
             ScriptInformation info = LoadFromFile();
@@ -62,6 +80,11 @@ namespace Parachute.Utilities
             return info;
         }
 
+        /// <summary>
+        /// Checks that the the <see cref="ScriptInformation"/> is valid.
+        /// </summary>
+        /// <param name="info">The info.</param>
+        /// <exception cref="ParachuteException">Aborting. Incorrect Configuration.</exception>
         private void InformationChecks(ScriptInformation info)
         {
             if (info == null)
@@ -83,6 +106,10 @@ namespace Parachute.Utilities
             }
         }
 
+        /// <summary>
+        /// Checks that the custom script variables in the <see cref="ScriptLocation"/> correspond to valid scripts.
+        /// </summary>
+        /// <param name="location">The location.</param>
         private void LocationCheckCustomScriptVariables(ScriptLocation location)
         {
             if(!location.Scripts.Any())
@@ -106,6 +133,10 @@ namespace Parachute.Utilities
             }
         }
 
+        /// <summary>
+        /// Checks that the path specified in the <see cref="ScriptLocation"/> contain valid scripts.
+        /// </summary>
+        /// <param name="location">The location.</param>
         private void LocationCheckPathContents(ScriptLocation location)
         {
             if (!location.ContainsSchemaScripts) return;
@@ -123,6 +154,11 @@ namespace Parachute.Utilities
             }
         }
 
+        /// <summary>
+        /// Checks that the schema files located in a SchemaScript <see cref="ScriptLocation"/> follw the correct naming convention.
+        /// </summary>
+        /// <param name="filename">The filename.</param>
+        /// <exception cref="ParachuteException">Aborting. Invalid Schema Script Name.</exception>
         private void LocationCheckSchemaFile(string filename)
         {
             var r = new Regex(@"\d{2}\.\d{2}\.\d{4}..*");
@@ -134,6 +170,11 @@ namespace Parachute.Utilities
             throw new ParachuteException("Aborting. Invalid Schema Script Name.");
         }
 
+        /// <summary>
+        /// Checks that the path specified in the <see cref="ScriptLocation"/> is valid.
+        /// </summary>
+        /// <param name="location">The location.</param>
+        /// <exception cref="ParachuteException">Aborting. Invalid Script Location.</exception>
         private void LocationCheckPath(ScriptLocation location)
         {
             if (Directory.Exists(location.Path)) return;
@@ -143,6 +184,10 @@ namespace Parachute.Utilities
             throw new ParachuteException("Aborting. Invalid Script Location.");
         }
 
+        /// <summary>
+        /// Prints basic information about the <see cref="ScriptLocation"/>
+        /// </summary>
+        /// <param name="location">The location.</param>
         private void LocationCheck(ScriptLocation location)
         {
             TraceHelper.Info("Validating Location '{0}' ", location.Path);
