@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Data.SqlClient;
 using Parachute.DataAccess;
 using Parachute.Entities;
+using Parachute.Exceptions;
 
 namespace Parachute.Managers
 {
@@ -14,7 +16,6 @@ namespace Parachute.Managers
         private const string ApplicationName = "Parachute";
         private readonly SqlConnection _connection;
         public event EventHandler<SqlError> InfoOrErrorMessage;
-        private static readonly Regex SplitterRegex = new Regex("^\\s*GO\\s*$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
 
         #region Event Handling
 
@@ -50,23 +51,10 @@ namespace Parachute.Managers
 
         #region Manual Sql Executions
 
-        private string GetSqlScriptFromFile(string sqlFile)
+        
+
+        public void ExecuteSchemaFile(IEnumerable<string> sqlScripts, string fileName, SchemaVersion version)
         {
-            string sql;
-
-            using (var strm = File.OpenRead(sqlFile))
-            using (var reader = new StreamReader(strm))
-            {
-                sql = reader.ReadToEnd();
-            }
-            return sql;
-        }
-
-        public void ExecuteSchemaFile(string sqlFile, SchemaVersion version)
-        {
-            var sql = GetSqlScriptFromFile(sqlFile);
-            var blocksOfSql = SplitterRegex.Split(sql);
-
             using (var transaction = _connection.BeginTransaction())
             {
                 using (var cmd = _connection.CreateCommand())
@@ -75,7 +63,7 @@ namespace Parachute.Managers
                     cmd.Transaction = transaction;
                     cmd.CommandType = CommandType.Text;
 
-                    foreach (var block in blocksOfSql.Where(block => block.Length > 0))
+                    foreach (var block in sqlScripts.Where(block => block.Length > 0))
                     {
                         cmd.CommandText = block;
 
@@ -112,7 +100,7 @@ namespace Parachute.Managers
                             MajorReleaseNumber = version.MajorVersion,
                             MinorReleaseNumber = version.MinorVersion,
                             PointReleaseNumber = version.PointRelease,
-                            ScriptName = sqlFile
+                            ScriptName = fileName
                         };
 
                     dc.ParachuteSchemaChangeLogs.InsertOnSubmit(entry);
@@ -142,11 +130,8 @@ namespace Parachute.Managers
 
         }
 
-        public void ExecuteScriptFile(string sqlFile)
+        public void ExecuteScriptFile(IEnumerable<string> sqlScripts, string fileName)
         {
-            var sql = GetSqlScriptFromFile(Path.GetFileName(sqlFile));
-            var blocksOfSql = SplitterRegex.Split(sql);
-
             using (var transaction = _connection.BeginTransaction())
             {
                 var transIsValid = true;
@@ -156,7 +141,7 @@ namespace Parachute.Managers
                     cmd.Transaction = transaction;
                     cmd.CommandType = CommandType.Text;
 
-                    foreach (var block in blocksOfSql.Where(block => block.Length > 0))
+                    foreach (var block in sqlScripts.Where(block => block.Length > 0))
                     {
                         cmd.CommandText = block;
 
@@ -247,6 +232,25 @@ namespace Parachute.Managers
                 }
                 return false;
             }
+        }
+
+        public SchemaVersion ConfigureDatabase(bool initDatabase)
+        {
+            if (!IsDatabaseConfiguredForParachute() && initDatabase)
+            {
+                if (!SetupDatabase())
+                {
+                    throw new ParachuteException("Aborting. Failed to setup database");
+                }
+            }
+            else
+            {
+                TraceHelper.Error("Database is not configured for Parachute");
+                TraceHelper.Error("Re-run application with --setup switch to install Parachute ChangeLog Tables");
+                throw new ParachuteException("Aborting. Database does not support Parachute");
+            }
+
+            return this.GetCurrentSchemaVersion();
         }
 
         #endregion Manual Sql Executions

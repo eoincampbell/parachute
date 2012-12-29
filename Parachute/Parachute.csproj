@@ -63,6 +63,7 @@
     <Compile Include="Managers\CommandLineArgumentManager.cs" />
     <Compile Include="Managers\DataManager.cs" />
     <Compile Include="Managers\Extensions.cs" />
+    <Compile Include="Managers\FileIOManager.cs" />
     <Compile Include="Managers\ResourceManager.cs" />
     <Compile Include="Managers\ScriptConfigFileManager.cs" />
     <Compile Include="Managers\TraceHelper.cs" />

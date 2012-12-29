@@ -20,6 +20,7 @@ namespace Parachute
         public ParachuteSettings Settings { get; set; }
         public DataManager SqlManager { get; set; }
         public ScriptConfigFileManager ScriptInfoLoader { get; set; }
+        public FileIOManager IOManager { get; set; }
 
         public Parachute(string [] args)
         {
@@ -28,30 +29,29 @@ namespace Parachute
 
             ScriptInfoLoader = new ScriptConfigFileManager(Settings.ConfigFilePath);
 
+            IOManager = new FileIOManager(new SqlFileGoSplitter());
+            
             SqlManager = new DataManager(Settings.ConnectionString);
+            SqlManager.InfoOrErrorMessage += SqlManagerOnInfoOrErrorMessage;
+
         }
 
         public void Run()
         {
             var scriptInfo = ScriptInfoLoader.Load();
+            var currentVersion = SqlManager.ConfigureDatabase(Settings.SetupDatabase);
 
-
-            SqlManager.InfoOrErrorMessage += SqlManagerOnInfoOrErrorMessage;
-
-            //Setup the database if needs be.
-            var currentVersion = ConfigureDatabase(SqlManager);
-
-            currentVersion = ApplySchemaChangesToDatabase(SqlManager, currentVersion, scriptInfo);
-
-            ApplyScriptsToDatabase(SqlManager, currentVersion, scriptInfo);
-            
+            currentVersion = ApplySchemaChangesToDatabase(currentVersion, scriptInfo);
+            ApplyScriptsToDatabase(currentVersion, scriptInfo);
             Trace.Flush();
         }
 
-        private static void ApplyScriptsToDatabase(DataManager sqlManager, SchemaVersion currentVersion, ScriptInformation scriptInfo)
+        private void ApplyScriptsToDatabase(SchemaVersion currentVersion, ScriptInformation scriptInfo)
         {
             foreach (var location in scriptInfo.ScriptLocations.Where(sl => !sl.ContainsSchemaScripts))
             {
+                SqlManager.GetType();
+
                 //foreach file in the location
                     // is directory marked as "runOnce"
                         //if yes
@@ -69,7 +69,7 @@ namespace Parachute
             }
         }
 
-        private static SchemaVersion ApplySchemaChangesToDatabase(DataManager sqlManager, SchemaVersion currentVersion, ScriptInformation scriptInfo)
+        private SchemaVersion ApplySchemaChangesToDatabase(SchemaVersion currentVersion, ScriptInformation scriptInfo)
         {
             //Query the ScriptInfo Collection & Pull the Script Location for the Schema Directory...
             var schemaScriptLocation = scriptInfo.ScriptLocations.FirstOrDefault(fd => fd.ContainsSchemaScripts);
@@ -78,22 +78,25 @@ namespace Parachute
             if (schemaScriptLocation != null)
             {
                 //Ensure the scripts are ordered alphanumerically ascending
-                foreach (var script in schemaScriptLocation.ScriptFiles.OrderBy(s => s))
+                foreach (var scriptFile in schemaScriptLocation.ScriptFiles.OrderBy(s => s))
                 {
-                    var fileSchemaVersion = script.ToSchemaVersion();
+                    var fileSchemaVersion = scriptFile.ToSchemaVersion();
 
                     if (fileSchemaVersion > currentVersion)
                     {
                         //If the file's schema version is greater than the currentVersion,
-                        TraceHelper.Info("Applying '{0}'", script);
-                        sqlManager.ExecuteSchemaFile(script, fileSchemaVersion);
+                        TraceHelper.Info("Applying '{0}'", scriptFile);
+                        
+                        var scripts = IOManager.ReadSqlScripts(scriptFile);
+                        
+                        SqlManager.ExecuteSchemaFile(scripts, scriptFile, fileSchemaVersion);
 
                         //Set that to be our new Current Version.
                         currentVersion = fileSchemaVersion;
                     }
                     else
                     {
-                        TraceHelper.Verbose("Skipping '{0}' - Current Version is '{1}'", script, currentVersion);
+                        TraceHelper.Verbose("Skipping '{0}' - Current Version is '{1}'", scriptFile, currentVersion);
                     }
                 }
             }
@@ -101,27 +104,6 @@ namespace Parachute
             //Return the new "Current" Schema Version
             return currentVersion;
 
-        }
-
-       
-
-        private SchemaVersion ConfigureDatabase(DataManager sqlManager)
-        {
-            if (!sqlManager.IsDatabaseConfiguredForParachute() && Settings.SetupDatabase)
-            {
-                if (!sqlManager.SetupDatabase())
-                {
-                    throw new ParachuteException("Aborting. Failed to setup database");
-                }
-            }
-            else
-            {
-                TraceHelper.Error("Database is not configured for Parachute");
-                TraceHelper.Error("Re-run application with --setup switch to install Parachute ChangeLog Tables");
-                throw new ParachuteException("Aborting. Database does not support Parachute");
-            }
-
-            return sqlManager.GetCurrentSchemaVersion();
         }
 
         private static void SqlManagerOnInfoOrErrorMessage(object sender, SqlError sqlError)
