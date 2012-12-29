@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using Parachute.Entities;
 
-namespace Parachute.Utilities
+namespace Parachute.Managers
 {
     public static class Extensions
     {

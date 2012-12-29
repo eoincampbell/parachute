@@ -6,12 +6,12 @@ using System.Xml.Serialization;
 using Parachute.Entities;
 using Parachute.Exceptions;
 
-namespace Parachute.Utilities
+namespace Parachute.Managers
 {
     /// <summary>
     /// Utility Class for parsing & loading the script information xml file.
     /// </summary>
-    public class ScriptInformationLoader
+    public class ScriptConfigFileManager
     {
         /// <summary>
         /// Gets the name of the file.
@@ -21,7 +21,7 @@ namespace Parachute.Utilities
         /// </value>
         public string FileName { get; private set; }
 
-        public ScriptInformationLoader  (string filename)
+        public ScriptConfigFileManager  (string filename)
         {
             FileName = filename;
         }

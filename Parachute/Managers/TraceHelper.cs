@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Parachute.Utilities
+namespace Parachute.Managers
 {
     /// <summary>
     /// Helper class for writing to the TraceListeners

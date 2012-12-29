@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Parachute.DataAccess;
 using Parachute.Exceptions;
-using Parachute.Utilities;
+using Parachute.Managers;
 
 namespace Parachute
 {
@@ -28,7 +28,7 @@ namespace Parachute
                 TraceHelper.Verbose("Connecting Using ConnectionString...");
                 TraceHelper.Verbose("ConnectionString: {0}", ConnectionString);
 
-                if (!SqlConnectionManager.TestConnection(ConnectionString))
+                if (!DataManager.TestConnection(ConnectionString))
                 {
                     throw new ParachuteAbortException("Failed to Connect To Database.");
                 }
@@ -42,9 +42,9 @@ namespace Parachute
                 TraceHelper.Verbose("Username:  {0}", Username);
                 TraceHelper.Verbose("Password:  {0}", Password);
 
-                var connstr = SqlConnectionManager.BuildConnectionString(Server, Database, Username, Password);
+                var connstr = DataManager.BuildConnectionString(Server, Database, Username, Password);
                 ConnectionString = connstr;
-                if (!SqlConnectionManager.TestConnection(ConnectionString))
+                if (!DataManager.TestConnection(ConnectionString))
                 {
                     throw new ParachuteAbortException("Failed to Connect To Database.");
                 }
@@ -67,7 +67,7 @@ namespace Parachute
 
         public static ParachuteSettings GetSettings(string [] args)
         {
-            var parser = new ArgumentParser(args);
+            var parser = new CommandLineArgumentManager(args);
 
             var settings = parser.ParseSettings();
 

@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Parachute.Exceptions;
 
-namespace Parachute.Utilities
+namespace Parachute.Managers
 {
     /// <summary>
     /// Utility class for parsing command line arguments and generating a settings object.
     /// </summary>
-    public class ArgumentParser
+    public class CommandLineArgumentManager
     {
         /// <summary>
         /// Gets or sets the arguments.
@@ -20,10 +19,10 @@ namespace Parachute.Utilities
         private List<string> Arguments { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArgumentParser" /> class.
+        /// Initializes a new instance of the <see cref="CommandLineArgumentManager" /> class.
         /// </summary>
         /// <param name="args">The args.</param>
-        public ArgumentParser(IEnumerable<string> args)
+        public CommandLineArgumentManager(IEnumerable<string> args)
         {
             Arguments = args.ToList();
         }
@@ -38,7 +37,7 @@ namespace Parachute.Utilities
 
             if (!Arguments.Any())
             {
-                throw new ParachuteAbortException(ResourceHelper.GetUsageMessage());
+                throw new ParachuteAbortException(ResourceManager.GetUsageMessage());
             }
 
             ConfigureOutput();
@@ -75,9 +74,9 @@ namespace Parachute.Utilities
                 switch (Arguments[i])
                 {
                     case "--help":
-                        throw new ParachuteAbortException(ResourceHelper.GetFullUsageMessage());
+                        throw new ParachuteAbortException(ResourceManager.GetFullUsageMessage());
                     case "--version":
-                        throw new ParachuteAbortException(ResourceHelper.GetVersionInformationMessage());
+                        throw new ParachuteAbortException(ResourceManager.GetVersionInformationMessage());
                     case "-s":
                     case "--server":
                         settings.Server = Arguments[++i];

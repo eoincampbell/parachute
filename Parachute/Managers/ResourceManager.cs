@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 
-namespace Parachute.Utilities
+namespace Parachute.Managers
 {
     /// <summary>
     /// Helper class to retrieve resource strings from the ResourceManager.
     /// </summary>
-    public class ResourceHelper
+    public class ResourceManager
     {
         /// <summary>
         /// Gets the usage message.

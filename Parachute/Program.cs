@@ -2,7 +2,7 @@
 using System.Data.SqlClient;
 using System.Diagnostics;
 using Parachute.Exceptions;
-using Parachute.Utilities;
+using Parachute.Managers;
 
 namespace Parachute
 {

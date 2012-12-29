@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Parachute.DataAccess;
 using Parachute.Entities;
 using Parachute.Exceptions;
-using Parachute.Utilities;
+using Parachute.Managers;
 
 namespace Parachute
 {
@@ -18,17 +18,17 @@ namespace Parachute
         private const string a = "-s (local) -d Sandbox -u sa -p epiosql --loglevel 4 --console --setup -f ConfigurationFiles\\configtest.xml";
 
         public ParachuteSettings Settings { get; set; }
-        public SqlConnectionManager SqlManager { get; set; }
-        public ScriptInformationLoader ScriptInfoLoader { get; set; }
+        public DataManager SqlManager { get; set; }
+        public ScriptConfigFileManager ScriptInfoLoader { get; set; }
 
         public Parachute(string [] args)
         {
             Settings = ParachuteSettings.GetSettings(a.Split(' '));
             Settings.Validate();
 
-            ScriptInfoLoader = new ScriptInformationLoader(Settings.ConfigFilePath);
+            ScriptInfoLoader = new ScriptConfigFileManager(Settings.ConfigFilePath);
 
-            SqlManager = new SqlConnectionManager(Settings.ConnectionString);
+            SqlManager = new DataManager(Settings.ConnectionString);
         }
 
         public void Run()
@@ -48,7 +48,7 @@ namespace Parachute
             Trace.Flush();
         }
 
-        private static void ApplyScriptsToDatabase(SqlConnectionManager sqlManager, SchemaVersion currentVersion, ScriptInformation scriptInfo)
+        private static void ApplyScriptsToDatabase(DataManager sqlManager, SchemaVersion currentVersion, ScriptInformation scriptInfo)
         {
             foreach (var location in scriptInfo.ScriptLocations.Where(sl => !sl.ContainsSchemaScripts))
             {
@@ -69,7 +69,7 @@ namespace Parachute
             }
         }
 
-        private static SchemaVersion ApplySchemaChangesToDatabase(SqlConnectionManager sqlManager, SchemaVersion currentVersion, ScriptInformation scriptInfo)
+        private static SchemaVersion ApplySchemaChangesToDatabase(DataManager sqlManager, SchemaVersion currentVersion, ScriptInformation scriptInfo)
         {
             //Query the ScriptInfo Collection & Pull the Script Location for the Schema Directory...
             var schemaScriptLocation = scriptInfo.ScriptLocations.FirstOrDefault(fd => fd.ContainsSchemaScripts);
@@ -105,7 +105,7 @@ namespace Parachute
 
        
 
-        private SchemaVersion ConfigureDatabase(SqlConnectionManager sqlManager)
+        private SchemaVersion ConfigureDatabase(DataManager sqlManager)
         {
             if (!sqlManager.IsDatabaseConfiguredForParachute() && Settings.SetupDatabase)
             {
