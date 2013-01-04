@@ -19,12 +19,21 @@ namespace Parachute.Managers
 
         #region Event Handling
 
+        /// <summary>
+        /// Called when [info or error message] is raised by SqlConnection.
+        /// </summary>
+        /// <param name="e">The e.</param>
         private void OnInfoOrErrorMessage(SqlError e)
         {
             var handler = InfoOrErrorMessage;
             if (handler != null) handler(this, e);
         }
 
+        /// <summary>
+        /// Passes on received Information Message to subscribers.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="SqlInfoMessageEventArgs" /> instance containing the event data.</param>
         private void InfoMessageReceived(object sender, SqlInfoMessageEventArgs e)
         {
             foreach (SqlError error in e.Errors)
@@ -37,6 +46,10 @@ namespace Parachute.Managers
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataManager" /> class.
+        /// </summary>
+        /// <param name="connectionString">The connection string.</param>
         public DataManager(string connectionString)
         {
             _connection = new SqlConnection(connectionString);
@@ -51,8 +64,16 @@ namespace Parachute.Managers
 
         #region Manual Sql Executions
 
-        
 
+
+        /// <summary>
+        /// Executes the schema file.
+        /// Executes a number of sql blocks as scripts and subsequently logs the Schema File in the SchemaChangeLog
+        /// All blocks are executed as a single transaction.
+        /// </summary>
+        /// <param name="sqlScripts">The SQL scripts.</param>
+        /// <param name="fileName">Name of the file.</param>
+        /// <param name="version">The version.</param>
         public void ExecuteSchemaFile(IEnumerable<string> sqlScripts, string fileName, SchemaVersion version)
         {
             using (var transaction = _connection.BeginTransaction())
@@ -88,8 +109,6 @@ namespace Parachute.Managers
                         }
                     }
                 }
-
-
 
                 using (var dc = new ParachuteModelDataContext(_connection))
                 {
@@ -130,11 +149,17 @@ namespace Parachute.Managers
 
         }
 
-        public void ExecuteScriptFile(IEnumerable<string> sqlScripts, string fileName)
+        /// <summary>
+        /// Executes the script file.
+        /// </summary>
+        /// <param name="sqlScripts">The SQL scripts.</param>
+        /// <param name="fileName">Name of the file.</param>
+        /// <param name="hash">The hash.</param>
+        /// <param name="version">The version.</param>
+        public void ExecuteScriptFile(IEnumerable<string> sqlScripts, string fileName, string hash, SchemaVersion version)
         {
             using (var transaction = _connection.BeginTransaction())
             {
-                var transIsValid = true;
                 using (var cmd = _connection.CreateCommand())
                 {
                     cmd.Connection = _connection;
@@ -156,24 +181,58 @@ namespace Parachute.Managers
                                 OnInfoOrErrorMessage(error);
                             }
 
-                            transIsValid = false;
                             transaction.Rollback();
-                            break;
+                            throw;
+                        }
+                        catch (Exception ex)
+                        {
+                            TraceHelper.Error(ex.Message);
+                            throw;
                         }
                     }
                 }
 
-                if (transIsValid)
+                using (var dc = new ParachuteModelDataContext(_connection))
                 {
-                    transaction.Commit();
+                    dc.Transaction = transaction;
+
+                    var entry = new ParachuteAppliedScriptsLog
+                    {
+                        SchemaVersion = version.ToString(),
+                        ScriptName = fileName,
+                        Hash = hash
+                    };
+
+                    dc.ParachuteAppliedScriptsLogs.InsertOnSubmit(entry);
+                    try
+                    {
+                        dc.SubmitChanges();
+                    }
+                    catch (SqlException sqlEx)
+                    {
+                        foreach (SqlError error in sqlEx.Errors)
+                        {
+                            OnInfoOrErrorMessage(error);
+                        }
+                        transaction.Rollback();
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        TraceHelper.Error(ex.Message);
+                        throw;
+                    }
                 }
+
+                transaction.Commit();
             }
         }
+
 
         /// <summary>
         /// Sets up the database by creating the relevant parachute change tracking tables.
         /// </summary>
-        /// <returns></returns>
+        /// <returns><c>true</c> if the database is setup correctly</returns>
         public bool SetupDatabase()
         {
             var result = true;
@@ -213,6 +272,12 @@ namespace Parachute.Managers
             return result;
         }
 
+        /// <summary>
+        /// Determines whether [is database configured for parachute].
+        /// </summary>
+        /// <returns>
+        ///   <c>true</c> if [is database configured for parachute]; otherwise, <c>false</c>.
+        /// </returns>
         public bool IsDatabaseConfiguredForParachute()
         {
             try
@@ -234,6 +299,12 @@ namespace Parachute.Managers
             }
         }
 
+        /// <summary>
+        /// Configures the database.
+        /// </summary>
+        /// <param name="initDatabase">if set to <c>true</c> [init database].</param>
+        /// <returns>The Current Schema Version of the Database</returns>
+        /// <exception cref="ParachuteException">Aborting. Failed to setup database</exception>
         public SchemaVersion ConfigureDatabase(bool initDatabase)
         {
             if (!IsDatabaseConfiguredForParachute() && initDatabase)
@@ -258,6 +329,9 @@ namespace Parachute.Managers
 
         #region IDisposable
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
         public void Dispose()
         {
             if (_connection != null)
@@ -268,6 +342,10 @@ namespace Parachute.Managers
 
         #endregion
 
+        /// <summary>
+        /// Gets the current schema version.
+        /// </summary>
+        /// <returns>The Current Schema Version of the Database</returns>
         public SchemaVersion GetCurrentSchemaVersion()
         {
             using (var pmdc = new ParachuteModelDataContext(_connection))
@@ -285,7 +363,15 @@ namespace Parachute.Managers
         }
 
         #region Static Helper Methods
-        
+
+        /// <summary>
+        /// Builds the connection string.
+        /// </summary>
+        /// <param name="server">The server.</param>
+        /// <param name="database">The database.</param>
+        /// <param name="username">The username.</param>
+        /// <param name="password">The password.</param>
+        /// <returns>The Connecton String</returns>
         public static string BuildConnectionString(string server, string database, string username, string password)
         {
             try
@@ -309,6 +395,11 @@ namespace Parachute.Managers
             }
         }
 
+        /// <summary>
+        /// Tests the connection.
+        /// </summary>
+        /// <param name="connectionString">The connection string.</param>
+        /// <returns><c>true</c> if the connection test is successful</returns>
         public static bool TestConnection(string connectionString)
         {
             try
