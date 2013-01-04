@@ -93,5 +93,18 @@ namespace Parachute.Entities
                 return Directory.GetFiles(Path,Filter, so);
             }
         }
+
+        /// <summary>
+        /// Gets the fullyqualified path of the script location to be removed from the FullFileName
+        /// For an absolute path, this is the path itself.
+        /// For a relative path, the Absolute path must first be established.
+        /// </summary>
+        public string AbsolutePath
+        {
+            get
+            {
+                return System.IO.Path.GetFullPath(Path);
+            }
+        }
     }
 }
