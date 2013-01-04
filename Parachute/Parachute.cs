@@ -50,23 +50,63 @@ namespace Parachute
         {
             foreach (var location in scriptInfo.ScriptLocations.Where(sl => !sl.ContainsSchemaScripts))
             {
-                SqlManager.GetType();
+                TraceHelper.Info("Applying Change Scripts In '{0}'", location.Path);
+                TraceHelper.Info("\tRunOnce: '{0}'", location.RunOnce);
+                TraceHelper.Info("\tRecursive: '{0}'", location.Recursive);
 
-                //foreach file in the location
-                    // is directory marked as "runOnce"
-                        //if yes
-                            //check if file applied before in a previous version.
-                                //if no
-                                    // Apply that file & log it
-                                //if yes
-                                    //skip it
-                        //if not
-                            //run that file regardless
-
-                
-                //foreach directory in the location
-                    // Recursively repeat.
+                ApplyScriptsToDatabaseRecursiveDirectoryWalk(currentVersion, location, location.AbsolutePath);
             }
+        }
+
+        private void ApplyScriptsToDatabaseRecursiveDirectoryWalk(SchemaVersion currentVersion, ScriptLocation location, string currentDirectoryPath)
+        {
+            foreach(var scriptFile in location.ScriptFiles.OrderBy(s => s))
+            {
+                var scriptNameToBeLogged = scriptFile.Replace(location.AbsolutePath, string.Empty);
+
+                if(!location.RunOnce) //Can be run many times
+                {
+                    TraceHelper.Info("Applying Script '{0}'", scriptNameToBeLogged);
+
+                    var scripts = IOManager.ReadSqlScripts(scriptFile);
+
+                    var hash = IOManager.GetFileMD5Hash(scriptFile);
+
+                    SqlManager.ExecuteScriptFile(scripts, scriptNameToBeLogged, hash, currentVersion);
+                }
+                else
+                {
+                    TraceHelper.Info("Applying Script '{0}'", scriptNameToBeLogged);
+
+                    var scripts = IOManager.ReadSqlScripts(scriptFile);
+
+                    var hash = IOManager.GetFileMD5Hash(scriptFile);
+
+                    SqlManager.ExecuteScriptFile(scripts, scriptNameToBeLogged, hash, currentVersion);
+                }
+            }
+
+
+            //foreach file in the location
+                // is directory marked as "runOnce"
+                    //if yes
+                        //check if file applied before in a previous version.
+                            //if no
+                                // Apply that file & log it
+                           //if yes
+                                //skip it
+                    //if not
+                      //run that file regardless
+
+            /*
+            if (!location.Recursive) return;
+            //foreach directory in the location
+            foreach(var subDirectoryPath in Directory.GetDirectories(currentDirectoryPath))
+            {
+                // Recursively repeat.
+                ApplyScriptsToDatabaseRecursiveDirectoryWalk(currentVersion, location, subDirectoryPath);
+            }
+             */
         }
 
         private SchemaVersion ApplySchemaChangesToDatabase(SchemaVersion currentVersion, ScriptInformation scriptInfo)
@@ -84,12 +124,14 @@ namespace Parachute
 
                     if (fileSchemaVersion > currentVersion)
                     {
+                        var scriptNameToBeLogged = scriptFile.Replace(schemaScriptLocation.AbsolutePath, string.Empty);
+
                         //If the file's schema version is greater than the currentVersion,
-                        TraceHelper.Info("Applying '{0}'", scriptFile);
+                        TraceHelper.Info("Applying Schema Change '{0}'", scriptNameToBeLogged);
                         
                         var scripts = IOManager.ReadSqlScripts(scriptFile);
-                        
-                        SqlManager.ExecuteSchemaFile(scripts, scriptFile, fileSchemaVersion);
+
+                        SqlManager.ExecuteSchemaFile(scripts, scriptNameToBeLogged, fileSchemaVersion);
 
                         //Set that to be our new Current Version.
                         currentVersion = fileSchemaVersion;
