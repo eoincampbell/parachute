@@ -15,14 +15,14 @@ namespace Parachute
 {
     public class Parachute : IDisposable
     {
-        private const string a = "-s (local) -d Sandbox -u sa -p epiosql --loglevel 4 --console --setup -f ConfigurationFiles\\configtest.xml";
+        private const string a = "-s (localdb)\\v11.0 -d Sandbox -u sa -p epiosql --loglevel 4 --console --setup -f ConfigurationFiles\\configtest.xml --test";
 
         public ParachuteSettings Settings { get; set; }
         public DataManager SqlManager { get; set; }
         public ScriptConfigFileManager ScriptInfoLoader { get; set; }
         public FileIOManager IOManager { get; set; }
 
-        public Parachute(string [] args)
+        public Parachute(string[] args)
         {
             Settings = ParachuteSettings.GetSettings(a.Split(' '));
             Settings.Validate();
@@ -30,8 +30,12 @@ namespace Parachute
             ScriptInfoLoader = new ScriptConfigFileManager(Settings.ConfigFilePath);
 
             IOManager = new FileIOManager(new SqlFileGoSplitter());
-            
-            SqlManager = new DataManager(Settings.ConnectionString);
+
+            //TODO: can be obtained with IoC...
+            SqlManager = new DataManager(Settings.ConnectionString, Settings.TestMode
+                ? (IParachuteCommand)new SingleTransactionCommand(Settings.ConnectionString, Settings.ExecutionMode)
+                : new MultiTransactionCommand(Settings.ConnectionString));
+
             SqlManager.InfoOrErrorMessage += SqlManagerOnInfoOrErrorMessage;
 
         }
@@ -43,6 +47,7 @@ namespace Parachute
 
             currentVersion = ApplySchemaChangesToDatabase(currentVersion, scriptInfo);
             ApplyScriptsToDatabase(currentVersion, scriptInfo);
+
             Trace.Flush();
         }
 
@@ -60,11 +65,11 @@ namespace Parachute
 
         private void ApplyScriptsToDatabaseRecursiveDirectoryWalk(SchemaVersion currentVersion, ScriptLocation location, string currentDirectoryPath)
         {
-            foreach(var scriptFile in location.ScriptFiles.OrderBy(s => s))
+            foreach (var scriptFile in location.ScriptFiles.OrderBy(s => s))
             {
                 var scriptNameToBeLogged = scriptFile.Replace(location.AbsolutePath, string.Empty);
 
-                if(!location.RunOnce) //Can be run many times
+                if (!location.RunOnce) //Can be run many times
                 {
                     TraceHelper.Info("Applying Script '{0}'", scriptNameToBeLogged);
 
@@ -88,15 +93,15 @@ namespace Parachute
 
 
             //foreach file in the location
-                // is directory marked as "runOnce"
-                    //if yes
-                        //check if file applied before in a previous version.
-                            //if no
-                                // Apply that file & log it
-                           //if yes
-                                //skip it
-                    //if not
-                      //run that file regardless
+            // is directory marked as "runOnce"
+            //if yes
+            //check if file applied before in a previous version.
+            //if no
+            // Apply that file & log it
+            //if yes
+            //skip it
+            //if not
+            //run that file regardless
 
             /*
             if (!location.Recursive) return;
@@ -128,7 +133,7 @@ namespace Parachute
 
                         //If the file's schema version is greater than the currentVersion,
                         TraceHelper.Info("Applying Schema Change '{0}'", scriptNameToBeLogged);
-                        
+
                         var scripts = IOManager.ReadSqlScripts(scriptFile);
 
                         SqlManager.ExecuteSchemaFile(scripts, scriptNameToBeLogged, fileSchemaVersion);

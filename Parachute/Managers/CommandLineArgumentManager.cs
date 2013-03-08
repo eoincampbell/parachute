@@ -58,7 +58,7 @@ namespace Parachute.Managers
             int level;
             if (int.TryParse(setting, out level) && level >= 1 && level <= 4)
             {
-                return (TraceLevel) level;
+                return (TraceLevel)level;
             }
             return TraceLevel.Info;
         }
@@ -103,6 +103,10 @@ namespace Parachute.Managers
                     case "--configfile":
                     case "-f":
                         settings.ConfigFilePath = Arguments[++i];
+                        break;
+                    case "-t":
+                    case "--test":
+                        settings.TestMode = true;
                         break;
                 }
             }

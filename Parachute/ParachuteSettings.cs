@@ -21,6 +21,13 @@ namespace Parachute
         public string ConfigFilePath { get; set; }
         public bool SetupDatabase { get; set; }
 
+        public bool TestMode { get; set; }
+
+        public ExecutionMode ExecutionMode
+        {
+            get { return TestMode ? ExecutionMode.TestMode : ExecutionMode.Normal; }
+        }
+
         public void Validate()
         {
             if (!string.IsNullOrEmpty(ConnectionString))
@@ -51,7 +58,7 @@ namespace Parachute
             }
 
 
-            if(string.IsNullOrEmpty(ConfigFilePath))
+            if (string.IsNullOrEmpty(ConfigFilePath))
             {
                 throw new ParachuteAbortException(
                     "Config File Path is not specified.\r\nYou must specify a configfile using the -f switch.");
@@ -65,7 +72,7 @@ namespace Parachute
         }
 
 
-        public static ParachuteSettings GetSettings(string [] args)
+        public static ParachuteSettings GetSettings(string[] args)
         {
             var parser = new CommandLineArgumentManager(args);
 
